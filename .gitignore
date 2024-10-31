@@ -1,0 +1,30 @@
+# Ignora file e cartelle di ambiente virtuale
+venv/
+.venv/
+
+# Ignora file Python compilati e cache
+*.pyc
+__pycache__/
+
+# Ignora file
+*.log
+*.csv
+*.h5
+*.pkl
+
+
+# Ignora file di sistema di macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+Thumbs.db
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+
+# Ignora file di configurazione personali
+secrets.txt
+
+# Ignora file di backup
+*~

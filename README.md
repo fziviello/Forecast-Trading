@@ -79,4 +79,6 @@ You can install them using pip:
 - Create DataSet: `python3 create_dataSet.py`
 - Start Forecast: `python3 forecast_bot.py`
 
+![screenshot1](/Screenshot_1.jpg?raw=true)
+
 

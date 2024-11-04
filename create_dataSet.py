@@ -18,8 +18,7 @@ def getForexData(symbol):
             raise ValueError(f"Nessun dato restituito per {symbol}")
         
         data.reset_index(inplace=True)
-        data['Date'] = data['Datetime']
-        return data[['Date', 'Open', 'High', 'Low', 'Close']]
+        return data[['Datetime', 'Open', 'High', 'Low', 'Close']]
     except Exception as e:
         print(f"Errore durante il recupero dei dati: {e}")
         return None
@@ -29,7 +28,7 @@ forex_data = getForexData(SYMBOL)
 if forex_data is not None:
     if GENERATE_PLOT:
         mpf.plot(
-            forex_data.set_index('Date'),
+            forex_data.set_index('Datetime'),
             type='candle', 
             style='charles',
             title=f"{SYMBOL} Forex Data",
@@ -39,7 +38,7 @@ if forex_data is not None:
         mpf.show()
         
         mpf.plot(
-            forex_data.set_index('Date'),
+            forex_data.set_index('Datetime'),
             type='candle',
             style='charles',
             title=f"{SYMBOL} Forex Data",

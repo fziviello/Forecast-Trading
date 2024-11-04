@@ -7,7 +7,8 @@ from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 import os
 from datetime import datetime
-import matplotlib.pyplot as plt
+import pytz
+import mplfinance as mpf
 import logging
 
 MODEL_PATH = 'lstm_trading_model.h5'
@@ -48,7 +49,64 @@ def create_sequences(X, y, time_steps=30):
         y_seq.append(y[i + time_steps])
     return np.array(X_seq), np.array(y_seq)
 
+def validate_predictions():
+    if not os.path.exists(FORECAST_RESULTS_PATH):
+        logging.info("Nessuna previsione precedente da validare.")
+        return
+    
+    prev_predictions = pd.read_csv(FORECAST_RESULTS_PATH)
+    df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
+    
+    for i, row in prev_predictions.iterrows():
+        pred_datetime = pd.to_datetime(row['Data Previsione'])
+        actual_data = df.loc[df['Datetime'] >= pred_datetime]
+        
+        if not actual_data.empty:
+            actual_close = actual_data.iloc[0]['Close']
+            predicted_take_profit = float(row['Take Profit'])
+            predicted_stop_loss = float(row['Stop Loss'])
+
+            if actual_close >= predicted_take_profit:
+                result = "Successo - Take Profit raggiunto"
+            elif actual_close <= predicted_stop_loss:
+                result = "Fallimento - Stop Loss raggiunto"
+            else:
+                result = "Previsione non soddisfatta"
+            
+            logging.info(f"Validazione: Data {pred_datetime}, Tipo: {row['Tipo']}, Risultato: {result}")
+        else:
+            logging.warning(f"Dati non disponibili per la validazione della previsione a {pred_datetime}.")
+
+def plot_forex_candlestick(df, predictions):
+    df_plot = df[-N_PREDICTIONS:].copy()
+    
+    df_plot.index = pd.to_datetime(df_plot.index)
+
+    df_plot['Date'] = df_plot.index
+    df_plot.index.name = 'Date'
+    df_plot = df_plot[['Open', 'High', 'Low', 'Close']]
+
+    buy_signals = df_plot.iloc[[i for i, x in enumerate(predictions) if x == 1]]
+    sell_signals = df_plot.iloc[[i for i, x in enumerate(predictions) if x == 0]]
+
+    add_plot = []
+    if not buy_signals.empty:
+        add_plot.append(mpf.make_addplot(buy_signals['Close'], type='scatter', marker='^', color='blue', markersize=100, label='Segnali Buy'))
+    if not sell_signals.empty:
+        add_plot.append(mpf.make_addplot(sell_signals['Close'], type='scatter', marker='v', color='magenta', markersize=100, label='Segnali Sell'))
+
+    add_plot.append(mpf.make_addplot(df_plot['Close'].iloc[-N_PREDICTIONS:], color='red', label='Prezzo di Chiusura'))
+
+    mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
+             ylabel='Prezzo', savefig=PLOT_FILE_PATH, volume=False, show_nontrading=False)
+
+    mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
+             ylabel='Prezzo', volume=False, show_nontrading=False)
+    mpf.show()
+
 def run_trading_model():
+    validate_predictions()
+
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility']]
     y = df['Target']
@@ -94,8 +152,12 @@ def run_trading_model():
         hypothetical_profit = round((take_profit - entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
         hypothetical_loss = round((entry_price - stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
         
+        data_obj = datetime.now()
+        data_utc = data_obj.replace(tzinfo=pytz.UTC)
+        data_formattata = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
+        
         results.append({
-            'Data Previsione': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'Data Previsione': data_formattata,
             'Tipo': order_type,
             'Prezzo': f"{entry_price:.3f}",
             'Stop Loss': f"{stop_loss:.3f}",
@@ -123,7 +185,7 @@ def run_trading_model():
 
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
-
+    
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     else:
@@ -131,25 +193,9 @@ def run_trading_model():
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='a', index=False, header=False)
         else:
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
-
+            
     if GENERATE_PLOT:
-        plt.figure(figsize=(14, 7))
-        plt.plot(df.index[-N_PREDICTIONS:], df['Close'].iloc[-N_PREDICTIONS:], color='red', label='Prezzo di Chiusura')
-        
-        buy_signals = [i for i, x in enumerate(predictions) if x == 1]
-        sell_signals = [i for i, x in enumerate(predictions) if x == 0]
-
-        if buy_signals:
-            plt.scatter(df.index[-N_PREDICTIONS:][buy_signals], df['Close'].iloc[-N_PREDICTIONS:].iloc[buy_signals], color='blue', label='Segnali Buy', marker='^')
-        if sell_signals:
-            plt.scatter(df.index[-N_PREDICTIONS:][sell_signals], df['Close'].iloc[-N_PREDICTIONS:].iloc[sell_signals], color='magenta', label='Segnali Sell', marker='v')
-
-        plt.title('Forecast')
-        plt.xlabel('Data')
-        plt.ylabel('Prezzo')
-        plt.legend()
-        plt.savefig(PLOT_FILE_PATH, format='png')
-        plt.show()
+        plot_forex_candlestick(df, predictions)
 
 if __name__ == "__main__":
     run_trading_model()

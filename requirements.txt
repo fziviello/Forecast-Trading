@@ -27,6 +27,7 @@ MarkupSafe==3.0.2
 matplotlib==3.9.2
 mdurl==0.1.2
 ml-dtypes==0.3.2
+mplfinance==0.12.10b0
 multitasking==0.0.11
 namex==0.0.8
 numpy==1.26.4

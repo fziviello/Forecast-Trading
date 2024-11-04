@@ -1,11 +1,11 @@
 import yfinance as yf
-import finplot as fplt
+import mplfinance as mpf
 from datetime import datetime, timedelta
 
-# Configurazioni
 GENERATE_PLOT = False
 SYMBOL = 'AUDJPY=X'
 CSVNAME = 'forex_data.csv'
+PLOTNAME = 'forex_chart.png'
 
 today = datetime.now()
 startDate = today - timedelta(days=730)
@@ -18,7 +18,8 @@ def getForexData(symbol):
             raise ValueError(f"Nessun dato restituito per {symbol}")
         
         data.reset_index(inplace=True)
-        return data[['Datetime', 'Open', 'High', 'Low', 'Close']]
+        data['Date'] = data['Datetime']
+        return data[['Date', 'Open', 'High', 'Low', 'Close']]
     except Exception as e:
         print(f"Errore durante il recupero dei dati: {e}")
         return None
@@ -27,8 +28,26 @@ forex_data = getForexData(SYMBOL)
 
 if forex_data is not None:
     if GENERATE_PLOT:
-        fplt.candlestick_ochl(forex_data[['Datetime', 'Open', 'Close', 'High', 'Low']])
-        fplt.show()
+        mpf.plot(
+            forex_data.set_index('Date'),
+            type='candle', 
+            style='charles',
+            title=f"{SYMBOL} Forex Data",
+            ylabel='Prezzo',
+            volume=False
+        )
+        mpf.show()
+        
+        mpf.plot(
+            forex_data.set_index('Date'),
+            type='candle',
+            style='charles',
+            title=f"{SYMBOL} Forex Data",
+            ylabel='Prezzo',
+            volume=False,
+            savefig=PLOTNAME
+        )
+        print(f"\033[92m{'Grafico salvato con successo in ' + PLOTNAME}\033[0m")
     
     forex_data.to_csv(CSVNAME, index=False)
     print(f"\033[92m{'Dataset generato con successo'}\033[0m")

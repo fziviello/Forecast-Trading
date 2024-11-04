@@ -82,3 +82,4 @@ You can install them using pip:
 - Start Forecast: `python3 forecast_bot.py`
 
 ![screenshot1](/Screenshot_1.jpg?raw=true)
+![screenshot1](/Screenshot_2.jpg?raw=true)

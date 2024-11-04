@@ -10,6 +10,7 @@ The data can be visualized in a candlestick chart and saved to a CSV file.
 - Saves the data to a CSV file.
 
 ## Customizable Parameters
+
 The script contains several parameters that you can modify to suit your needs:
 
 - `GENERATE_PLOT` True/False
@@ -38,6 +39,8 @@ Use the dataset created with the script `create_dataSet`
 `SCALER_PATH`: File path where the MinMaxScaler object is saved
 `FORECAST_RESULTS_PATH`: File path where Forecast Result
 `DATASET_PATH`: File path where DataSet
+`LOG_FILE_PATH`: File path where Logs
+`PLOT_FILE_PATH`: Path to the file where the graphs are located
 
 `OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
 `REPEAT_TRAINING` : Parameter determines whether the trading model should be retrained, allowing it to update its state and improve predictions based on new market data.
@@ -49,7 +52,6 @@ Use the dataset created with the script `create_dataSet`
 `UNIT`: The number of units traded.
 `EXCHANGE_RATE`: The exchange rate for profit calculations.
 `N_PREDICTIONS`: The maximum number of predictions to generate.
-
 
 ## Requirements
 
@@ -80,5 +82,3 @@ You can install them using pip:
 - Start Forecast: `python3 forecast_bot.py`
 
 ![screenshot1](/Screenshot_1.jpg?raw=true)
-
-

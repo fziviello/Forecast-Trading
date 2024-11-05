@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
@@ -20,8 +21,10 @@ PLOT_FILE_PATH = 'forecast_trading.png'
 
 MARGIN_PROFIT = 0.005
 LEVERAGE = 0.01
-UNIT = 100
+UNIT = 1000
 EXCHANGE_RATE = 1.0
+DATA_MODEL_RATE = "AUD"
+FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 5
 
 REPEAT_TRAINING = False
@@ -29,6 +32,20 @@ GENERATE_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 
 logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def exchange_currency(base, target):
+    ticker = f"{base}{target}=X"
+    try:
+        data = yf.Ticker(ticker)
+        exchange_rate = (data.history(period="1d")['Close'].iloc[-1])
+        exchange_rate = round(exchange_rate, 3)
+        print(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
+        logging.info(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
+        return exchange_rate
+    except Exception as e:
+        print(f"\033[91m'Errore nel recuperare il tasso di cambio, verrà utilizzato il suo valore di default'\033[0m")
+        logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
+        return None
 
 def load_and_preprocess_data():
     df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
@@ -105,6 +122,7 @@ def plot_forex_candlestick(df, predictions):
     mpf.show()
 
 def run_trading_model():
+    
     validate_predictions()
 
     df = load_and_preprocess_data()
@@ -198,4 +216,8 @@ def run_trading_model():
         plot_forex_candlestick(df, predictions)
 
 if __name__ == "__main__":
+    rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE) 
+    if rate_exchange:
+        EXCHANGE_RATE = rate_exchange
+   
     run_trading_model()

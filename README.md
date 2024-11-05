@@ -51,6 +51,8 @@ Use the dataset created with the script `create_dataSet`
 `LEVERAGE`: The leverage to apply to trades.
 `UNIT`: The number of units traded.
 `EXCHANGE_RATE`: The exchange rate for profit calculations.
+`DATA_MODEL_RATE`: Model reference currency
+`FAVORITE_RATE`: Preferred conversion currency
 `N_PREDICTIONS`: The maximum number of predictions to generate.
 
 ## Requirements

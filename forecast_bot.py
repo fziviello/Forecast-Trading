@@ -7,7 +7,7 @@ from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 import os
-from datetime import datetime
+from datetime import datetime,timedelta
 import pytz
 import mplfinance as mpf
 import logging
@@ -203,10 +203,11 @@ def run_trading_model():
         
         data_obj = datetime.now()
         data_utc = data_obj.replace(tzinfo=pytz.UTC)
-        data_formattata = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
+        data_utc = data_utc - timedelta(hours=1) #sottraggo 1h per essere allineato al dataset
+        data_formatted = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
         
         results.append({
-            'Data Previsione': data_formattata,
+            'Data Previsione': data_formatted,
             'Tipo': order_type,
             'Prezzo': f"{entry_price:.3f}",
             'Stop Loss': f"{stop_loss:.3f}",

@@ -122,6 +122,7 @@ def validate_predictions():
     if validation_results:
         validation_df = pd.DataFrame(validation_results)
         validation_df.to_csv(VALIDATION_RESULTS_PATH, index=False)
+        print(f"Risultati di validazione salvati in {VALIDATION_RESULTS_PATH}.")
         logging.info(f"Risultati di validazione salvati in {VALIDATION_RESULTS_PATH}.")
 
 def plot_forex_candlestick(df, predictions):

@@ -16,6 +16,7 @@ MODEL_PATH = 'lstm_trading_model.h5'
 SCALER_PATH = 'scaler.pkl'
 DATASET_PATH = 'forex_data.csv'
 FORECAST_RESULTS_PATH = 'forecast_trading.csv'
+VALIDATION_RESULTS_PATH = 'forecast_validation.csv'
 LOG_FILE_PATH = 'forecast_trading.log'
 PLOT_FILE_PATH = 'forecast_trading.png'
 
@@ -32,6 +33,12 @@ GENERATE_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 
 logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def calculator_profit(predicted_take_profit, predicted_entry_price):
+    return round((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
+            
+def calculator_loss(predicted_stop_loss, predicted_entry_price):
+    return round((predicted_entry_price - predicted_stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
 
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
@@ -74,12 +81,15 @@ def validate_predictions():
     prev_predictions = pd.read_csv(FORECAST_RESULTS_PATH)
     df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
     
+    validation_results = []
+
     for i, row in prev_predictions.iterrows():
         pred_datetime = pd.to_datetime(row['Data Previsione'])
         actual_data = df.loc[df['Datetime'] >= pred_datetime]
         
         if not actual_data.empty:
             actual_close = actual_data.iloc[0]['Close']
+            predicted_entry_price = float(row['Prezzo'])
             predicted_take_profit = float(row['Take Profit'])
             predicted_stop_loss = float(row['Stop Loss'])
 
@@ -91,8 +101,28 @@ def validate_predictions():
                 result = "Previsione non soddisfatta"
             
             logging.info(f"Validazione: Data {pred_datetime}, Tipo: {row['Tipo']}, Risultato: {result}")
+            
+            hypothetical_profit = calculator_profit(predicted_take_profit,predicted_entry_price)
+            hypothetical_loss = calculator_loss(predicted_stop_loss,predicted_entry_price)
+                    
+            validation_results.append({
+                'Data Previsione': pred_datetime,
+                'Tipo': row['Tipo'],
+                'Risultato': result,
+                'Prezzo': predicted_entry_price,
+                'Close Attuale': actual_close,
+                'Take Profit': predicted_take_profit,
+                'Stop Loss': predicted_stop_loss,
+                'Guadagno': f"{hypothetical_profit:.2f}€",
+                'Perdita': f"{hypothetical_loss:.2f}€"
+            })
         else:
             logging.warning(f"Dati non disponibili per la validazione della previsione a {pred_datetime}.")
+    
+    if validation_results:
+        validation_df = pd.DataFrame(validation_results)
+        validation_df.to_csv(VALIDATION_RESULTS_PATH, index=False)
+        logging.info(f"Risultati di validazione salvati in {VALIDATION_RESULTS_PATH}.")
 
 def plot_forex_candlestick(df, predictions):
     df_plot = df[-N_PREDICTIONS:].copy()
@@ -167,8 +197,8 @@ def run_trading_model():
         stop_loss = round(entry_price * (0.98 if order_type == "Buy" else 1.02), 3)
         take_profit = round(entry_price * (1 + MARGIN_PROFIT if order_type == "Buy" else 1 - MARGIN_PROFIT), 3)
         
-        hypothetical_profit = round((take_profit - entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
-        hypothetical_loss = round((entry_price - stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
+        hypothetical_profit = calculator_profit(take_profit,entry_price)
+        hypothetical_loss = calculator_loss(stop_loss,entry_price)
         
         data_obj = datetime.now()
         data_utc = data_obj.replace(tzinfo=pytz.UTC)

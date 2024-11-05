@@ -39,6 +39,7 @@ Use the dataset created with the script `create_dataSet`
 `SCALER_PATH`: File path where the MinMaxScaler object is saved
 `FORECAST_RESULTS_PATH`: File path where Forecast Result
 `DATASET_PATH`: File path where DataSet
+`VALIDATION_RESULTS_PATH`: File path where Validation Result
 `LOG_FILE_PATH`: File path where Logs
 `PLOT_FILE_PATH`: Path to the file where the graphs are located
 

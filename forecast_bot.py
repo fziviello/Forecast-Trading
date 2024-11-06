@@ -45,8 +45,8 @@ def exchange_currency(base, target):
     try:
         data = yf.Ticker(ticker)
         exchange_rate = (data.history(period="1d")['Close'].iloc[-1])
-        exchange_rate = round(exchange_rate, 3)
-        print(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
+        exchange_rate = round(exchange_rate, 2)
+        print(f"\033[94m\nIl tasso di cambio da {base} a {target} è: \033[92m{exchange_rate}€\033[0m\n")
         logging.info(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
         return exchange_rate
     except Exception as e:
@@ -122,7 +122,8 @@ def validate_predictions():
     total_predictions = len(prev_predictions)
     if total_predictions > 0:
         failure_rate = unsuccessful_count / total_predictions
-        print(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
+        if failure_rate > 0:
+            print(f"\033[91mTasso di previsioni non riuscite: {failure_rate:.2f}\033[0m")
         logging.info(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
         REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
 
@@ -236,6 +237,7 @@ def run_trading_model():
         
         row_index +=1
 
+    print("\n")
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     

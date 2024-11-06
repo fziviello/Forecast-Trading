@@ -79,11 +79,17 @@ You can install them using pip:
 
 `pip3 install -r requirements.txt`
 
+## Use Notebook
+
+- The notebook can be modified to analyze other forex pairs by simply changing the value of SYMBOL.
+
+- To periodically update the dataset, the notebook can be scheduled to run automatically with a task scheduler or other automation tools.
+
 ## Run
 
 - Create DataSet: `python3 create_dataSet.py`
 - Start Forecast: `python3 forecast_bot.py`
 
-![screenshot1](/Screenshot_1.jpg?raw=true)
+![screenshot1](/Screenshot_1.png?raw=true)
 
-![screenshot1](/Screenshot_2.jpg?raw=true)
+![screenshot1](/Screenshot_2.png?raw=true)

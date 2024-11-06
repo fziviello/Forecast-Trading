@@ -98,7 +98,7 @@ def validate_predictions():
             elif actual_close <= predicted_stop_loss:
                 result = "Fallimento - Stop Loss raggiunto"
             else:
-                result = "Previsione non soddisfatta"
+                result = "Previsione non avvenuta"
             
             logging.info(f"Validazione: Data {pred_datetime}, Tipo: {row['Tipo']}, Risultato: {result}")
             
@@ -117,7 +117,7 @@ def validate_predictions():
                 'Perdita': f"{hypothetical_loss:.2f}€"
             })
         else:
-            logging.warning(f"Dati non disponibili per la validazione della previsione a {pred_datetime}.")
+            logging.warning(f"Dati non disponibili per la validazione della previsione: {pred_datetime}.")
     
     if validation_results:
         validation_df = pd.DataFrame(validation_results)

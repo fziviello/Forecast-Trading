@@ -122,6 +122,7 @@ def validate_predictions():
     total_predictions = len(prev_predictions)
     if total_predictions > 0:
         failure_rate = unsuccessful_count / total_predictions
+        print(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
         logging.info(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
         REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
 

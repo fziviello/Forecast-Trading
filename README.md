@@ -44,7 +44,7 @@ Use the dataset created with the script `create_dataSet`
 `PLOT_FILE_PATH`: Path to the file where the graphs are located
 
 `OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
-`REPEAT_TRAINING` : Parameter determines whether the trading model should be retrained, allowing it to update its state and improve predictions based on new market data.
+`VALIDATION_THRESHOLD`: Error threshold to enable retraining
 
 ### Business Parameters
 

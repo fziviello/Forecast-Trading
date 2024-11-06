@@ -27,8 +27,8 @@ EXCHANGE_RATE = 1.0
 DATA_MODEL_RATE = "AUD"
 FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 10
+VALIDATION_THRESHOLD = 0.5
 
-REPEAT_TRAINING = False
 GENERATE_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 
@@ -74,19 +74,20 @@ def create_sequences(X, y, time_steps=30):
     return np.array(X_seq), np.array(y_seq)
 
 def validate_predictions():
+    global REPEAT_TRAINING
     if not os.path.exists(FORECAST_RESULTS_PATH):
         logging.info("Nessuna previsione precedente da validare.")
         return
-    
+
     prev_predictions = pd.read_csv(FORECAST_RESULTS_PATH)
     df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
-    
     validation_results = []
+    unsuccessful_count = 0
 
     for i, row in prev_predictions.iterrows():
         pred_datetime = pd.to_datetime(row['Data Previsione'])
         actual_data = df.loc[df['Datetime'] >= pred_datetime]
-        
+
         if not actual_data.empty:
             actual_close = actual_data.iloc[0]['Close']
             predicted_entry_price = float(row['Prezzo'])
@@ -97,14 +98,10 @@ def validate_predictions():
                 result = "Successo - Take Profit raggiunto"
             elif actual_close <= predicted_stop_loss:
                 result = "Fallimento - Stop Loss raggiunto"
+                unsuccessful_count += 1
             else:
                 result = "Previsione non avvenuta"
             
-            logging.info(f"Validazione: Data {pred_datetime}, Tipo: {row['Tipo']}, Risultato: {result}")
-            
-            hypothetical_profit = calculator_profit(predicted_take_profit,predicted_entry_price)
-            hypothetical_loss = calculator_loss(predicted_stop_loss,predicted_entry_price)
-                    
             validation_results.append({
                 'Data Previsione': pred_datetime,
                 'Tipo': row['Tipo'],
@@ -113,17 +110,20 @@ def validate_predictions():
                 'Close Attuale': actual_close,
                 'Take Profit': predicted_take_profit,
                 'Stop Loss': predicted_stop_loss,
-                'Guadagno': f"{hypothetical_profit:.2f}€",
-                'Perdita': f"{hypothetical_loss:.2f}€"
+                'Guadagno': f"{calculator_profit(predicted_take_profit, predicted_entry_price):.2f}€",
+                'Perdita': f"{calculator_loss(predicted_stop_loss, predicted_entry_price):.2f}€"
             })
-        else:
-            logging.warning(f"Dati non disponibili per la validazione della previsione: {pred_datetime}.")
-    
+
     if validation_results:
         validation_df = pd.DataFrame(validation_results)
         validation_df.to_csv(VALIDATION_RESULTS_PATH, index=False)
-        print(f"Risultati di validazione salvati in {VALIDATION_RESULTS_PATH}.")
         logging.info(f"Risultati di validazione salvati in {VALIDATION_RESULTS_PATH}.")
+
+    total_predictions = len(prev_predictions)
+    if total_predictions > 0:
+        failure_rate = unsuccessful_count / total_predictions
+        logging.info(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
+        REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
 
 def plot_forex_candlestick(df, predictions):
     df_plot = df[-N_PREDICTIONS:].copy()
@@ -153,9 +153,7 @@ def plot_forex_candlestick(df, predictions):
     mpf.show()
 
 def run_trading_model():
-    
     validate_predictions()
-
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility']]
     y = df['Target']

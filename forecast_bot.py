@@ -194,6 +194,8 @@ def run_trading_model():
     for i, pred in enumerate(predictions.flatten()):
         entry_price = round(df['Close'].iloc[-N_PREDICTIONS + i], 3)
         order_type = "Buy" if pred == 1 else "Sell"
+        order_class = "Limit" if pred == 1 else "Stop"
+
         
         stop_loss = round(entry_price * (0.98 if order_type == "Buy" else 1.02), 3)
         take_profit = round(entry_price * (1 + MARGIN_PROFIT if order_type == "Buy" else 1 - MARGIN_PROFIT), 3)
@@ -208,7 +210,7 @@ def run_trading_model():
         
         results.append({
             'Data Previsione': data_formatted,
-            'Tipo': order_type,
+            'Tipo': f"{order_type} {order_class}",
             'Prezzo': f"{entry_price:.3f}",
             'Stop Loss': f"{stop_loss:.3f}",
             'Take Profit': f"{take_profit:.3f}",
@@ -223,7 +225,7 @@ def run_trading_model():
     for result in results:
         logging.info(f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
 
-        type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] == "Buy" else f"\033[91m{result['Tipo']}\033[0m"
+        type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] == "Buy" or result['Tipo'] == "Buy Limit" or result['Tipo'] == "Buy Stop" else f"\033[91m{result['Tipo']}\033[0m"
         entry_price_colored = f"\033[96m{result['Prezzo']}\033[0m"
         stop_loss_colored = f"\033[93m{result['Stop Loss']}\033[0m"
         take_profit_colored = f"\033[95m{result['Take Profit']}\033[0m"
@@ -231,7 +233,7 @@ def run_trading_model():
         perdita_colored = f"\033[91m{result['Perdita']}\033[0m"
 
         print(
-            f"{row_index:>2})  Tipo: {type_colored:<8} Prezzo: {entry_price_colored:<8} Stop Loss: {stop_loss_colored:<8} "
+            f"{row_index:>2})  {type_colored:<8} Prezzo: {entry_price_colored:<8} Stop Loss: {stop_loss_colored:<8} "
             f"Take Profit: {take_profit_colored:<8} Guadagno: {guadagno_colored:<10} Perdita: {perdita_colored:<10}"
         )
         

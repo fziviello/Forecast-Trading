@@ -6,14 +6,20 @@ GENERATE_PLOT = False
 SYMBOL = 'AUDJPY=X'
 CSVNAME = 'forex_data.csv'
 PLOTNAME = 'forex_chart.png'
+INTERVAL = '30m'
 
 today = datetime.now()
-startDate = today - timedelta(days=730)
+if INTERVAL == "30m" :
+   ndays = 60
+else:
+   ndays = 730
+
+startDate = today - timedelta(days=ndays)
 
 def getForexData(symbol):
     try:
         sym = yf.Ticker(symbol)
-        data = sym.history(start=startDate, end=today, interval='1h')
+        data = sym.history(start=startDate, end=today, interval=INTERVAL)
         if data.empty:
             raise ValueError(f"Nessun dato restituito per {symbol}")
         

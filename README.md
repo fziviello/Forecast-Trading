@@ -16,6 +16,8 @@ The script contains several parameters that you can modify to suit your needs:
 - `GENERATE_PLOT` True/False
 - `SYMBOL`  Stock Exchange Symbol
 - `CSVNAME` ForexData.csv
+- `PLOTNAME` = forex_chart.png 
+- `INTERVAL` = 30m or 1h
 
 # Forecast BOT
 

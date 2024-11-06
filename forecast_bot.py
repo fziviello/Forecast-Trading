@@ -26,7 +26,7 @@ UNIT = 1000
 EXCHANGE_RATE = 1.0
 DATA_MODEL_RATE = "AUD"
 FAVORITE_RATE = "EUR"
-N_PREDICTIONS = 5
+N_PREDICTIONS = 10
 
 REPEAT_TRAINING = False
 GENERATE_PLOT = False
@@ -216,10 +216,13 @@ def run_trading_model():
             'Perdita': f"{hypothetical_loss:.2f}€"
         })
 
+    results = sorted(results, key=lambda x: float(x['Prezzo']))
+
     print("\nPrevisioni Generate:\n")
+    row_index = 1
     for result in results:
         logging.info(f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
-        
+
         type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] == "Buy" else f"\033[91m{result['Tipo']}\033[0m"
         entry_price_colored = f"\033[96m{result['Prezzo']}\033[0m"
         stop_loss_colored = f"\033[93m{result['Stop Loss']}\033[0m"
@@ -228,10 +231,11 @@ def run_trading_model():
         perdita_colored = f"\033[91m{result['Perdita']}\033[0m"
 
         print(
-            f"Tipo: {type_colored}, Prezzo: {entry_price_colored}, Stop Loss: {stop_loss_colored}, "
-            f"Take Profit: {take_profit_colored}, Guadagno: {guadagno_colored}, "
-            f"Perdita: {perdita_colored}"
+            f"{row_index:>2})  Tipo: {type_colored:<8} Prezzo: {entry_price_colored:<8} Stop Loss: {stop_loss_colored:<8} "
+            f"Take Profit: {take_profit_colored:<8} Guadagno: {guadagno_colored:<10} Perdita: {perdita_colored:<10}"
         )
+        
+        row_index +=1
 
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]

@@ -1,3 +1,21 @@
+# Model Training
+
+The script contains that schedules model training
+
+## Customizable Parameters
+
+The script contains several parameters that you can modify to suit your needs:
+
+- `SCRIPT_CREATE_DATASET`: File path script create dataset
+- `SCRIPT_FORECAST`: File path script forecast
+- `LOG_FILE_PATH`: File path where Logs
+- `TIME_MINUTE_REPEAT`: Interval expressed in minutes of the schedule
+- `N_REPEAT`: Number of repetitions
+  
+## Run
+
+- Start Training : `python3 training.py`
+
 # DataSet Generator
 
 This Python script retrieves historical Forex data for a specified symbol using the `yfinance` library. 
@@ -13,11 +31,11 @@ The data can be visualized in a candlestick chart and saved to a CSV file.
 
 The script contains several parameters that you can modify to suit your needs:
 
-- `GENERATE_PLOT` True/False
-- `SYMBOL`  Stock Exchange Symbol
-- `CSVNAME` ForexData.csv
-- `PLOTNAME` = forex_chart.png 
-- `INTERVAL` = 30m or 1h
+- `GENERATE_PLOT`: True/False
+- `SYMBOL`: The Name of Stock Exchange Symbol
+- `CSVNAME`: File path where saved DataSet
+- `PLOTNAME`: Graph file name
+- `INTERVAL`: Dataset Range (suggested 30m or 1h)
 
 # Forecast BOT
 

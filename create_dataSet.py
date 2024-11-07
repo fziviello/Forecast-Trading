@@ -21,12 +21,12 @@ def getForexData(symbol):
         sym = yf.Ticker(symbol)
         data = sym.history(start=startDate, end=today, interval=INTERVAL)
         if data.empty:
-            raise ValueError(f"Nessun dato restituito per {symbol}")
+            raise ValueError(f"\033[93mNessun dato recuperato per {symbol}\033[0m")
         
         data.reset_index(inplace=True)
         return data[['Datetime', 'Open', 'High', 'Low', 'Close']]
     except Exception as e:
-        print(f"Errore durante il recupero dei dati: {e}")
+        print(f"\033[91mErrore durante il recupero dei dati: {e}\033[0m")
         return None
 
 forex_data = getForexData(SYMBOL)

@@ -7,7 +7,7 @@ from datetime import datetime
 SCRIPT_CREATE_DATASET = "create_dataSet.py"
 SCRIPT_FORECAST = "forecast_bot.py"
 LOG_FILE_PATH = 'scheduler.log'
-TIME_MINUTE_REPEAT = 30
+TIME_MINUTE_REPEAT = 40
 N_REPEAT = 5
 
 logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

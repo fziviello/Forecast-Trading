@@ -20,14 +20,14 @@ VALIDATION_RESULTS_PATH = 'forecast_validation.csv'
 LOG_FILE_PATH = 'forecast_trading.log'
 PLOT_FILE_PATH = 'forecast_trading.png'
 
-MARGIN_PROFIT = 0.005
+MARGIN_PROFIT = 0.002
 LEVERAGE = 0.01
 UNIT = 1000
 EXCHANGE_RATE = 1.0
 DATA_MODEL_RATE = "AUD"
 FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 10
-VALIDATION_THRESHOLD = 0.5
+VALIDATION_THRESHOLD = 0.1
 
 GENERATE_PLOT = False
 OVERWRITE_FORECAST_CSV = False
@@ -35,7 +35,7 @@ OVERWRITE_FORECAST_CSV = False
 logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def calculator_profit(predicted_take_profit, predicted_entry_price):
-    return round((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
+    return round(abs((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE), 2)
             
 def calculator_loss(predicted_stop_loss, predicted_entry_price):
     return round((predicted_entry_price - predicted_stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
@@ -61,6 +61,18 @@ def load_and_preprocess_data():
     df['MA20'] = df['Close'].rolling(window=20).mean()
     df['MA50'] = df['Close'].rolling(window=50).mean()
     df['Volatility'] = df['Close'].rolling(window=20).std()
+    
+    delta = df['Close'].diff(1)
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    df['RSI'] = 100 - (100 / (1 + gain / loss))
+
+    df['MACD'] = df['Close'].ewm(span=12, adjust=False).mean() - df['Close'].ewm(span=26, adjust=False).mean()
+    df['Signal Line'] = df['MACD'].ewm(span=9, adjust=False).mean()
+
+    df['Upper Bollinger'] = df['MA20'] + 2 * df['Volatility']
+    df['Lower Bollinger'] = df['MA20'] - 2 * df['Volatility']
+    
     df['Target'] = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
     df.dropna(inplace=True)
     
@@ -157,7 +169,7 @@ def plot_forex_candlestick(df, predictions):
 def run_trading_model():
     validate_predictions()
     df = load_and_preprocess_data()
-    X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility']]
+    X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger']].values
     y = df['Target']
 
     if os.path.exists(SCALER_PATH):
@@ -168,7 +180,7 @@ def run_trading_model():
         joblib.dump(scaler, SCALER_PATH)
     X_scaled = scaler.transform(X)
 
-    time_steps = 30
+    time_steps = 20
     X_seq, y_seq = create_sequences(X_scaled, y.values, time_steps)
     X_train, X_test = X_seq[:-N_PREDICTIONS], X_seq[-N_PREDICTIONS:]
     y_train, y_test = y_seq[:-N_PREDICTIONS], y_seq[-N_PREDICTIONS:]
@@ -196,18 +208,17 @@ def run_trading_model():
         order_type = "Buy" if pred == 1 else "Sell"
         order_class = "Limit" if pred == 1 else "Stop"
 
-        
         stop_loss = round(entry_price * (0.98 if order_type == "Buy" else 1.02), 3)
         take_profit = round(entry_price * (1 + MARGIN_PROFIT if order_type == "Buy" else 1 - MARGIN_PROFIT), 3)
         
-        hypothetical_profit = calculator_profit(take_profit,entry_price)
-        hypothetical_loss = calculator_loss(stop_loss,entry_price)
-        
+        hypothetical_profit = calculator_profit(take_profit, entry_price)
+        hypothetical_loss = calculator_loss(stop_loss, entry_price)
+
         data_obj = datetime.now()
         data_utc = data_obj.replace(tzinfo=pytz.UTC)
-        data_utc = data_utc - timedelta(hours=1) #sottraggo 1h per essere allineato al dataset
+        data_utc = data_utc - timedelta(minutes=30)  # Sottraggo 30m per essere allineato al dataset
         data_formatted = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
-        
+
         results.append({
             'Data Previsione': data_formatted,
             'Tipo': f"{order_type} {order_class}",
@@ -236,13 +247,13 @@ def run_trading_model():
             f"{row_index:>2})  {type_colored:<8} Prezzo: {entry_price_colored:<8} Stop Loss: {stop_loss_colored:<8} "
             f"Take Profit: {take_profit_colored:<8} Guadagno: {guadagno_colored:<10} Perdita: {perdita_colored:<10}"
         )
-        
-        row_index +=1
+
+        row_index += 1
 
     print("\n")
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
-    
+
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     else:
@@ -250,13 +261,13 @@ def run_trading_model():
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='a', index=False, header=False)
         else:
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
-            
+
     if GENERATE_PLOT:
         plot_forex_candlestick(df, predictions)
 
 if __name__ == "__main__":
-    rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE) 
+    rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE)
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
-   
+
     run_trading_model()

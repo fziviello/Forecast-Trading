@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 SCRIPT_CREATE_DATASET = "create_dataSet.py"
-SCRIPT_FORECAST = "forecast_bot.py"
+SCRIPT_FORECAST = "forecast_bot.py --symbol AUDJPY"
 LOG_FILE_PATH = 'scheduler.log'
 TIME_MINUTE_REPEAT = 40
 N_REPEAT = 5

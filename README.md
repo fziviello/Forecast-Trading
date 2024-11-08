@@ -51,7 +51,7 @@ This script implements a Long Short-Term Memory (LSTM) neural network for predic
 ## Usage
 Use the dataset created with the script `create_dataSet`
 
-## Customizable Parameters
+## Dynamic Parameters
 
 `MODEL_PATH`: File path where the trained LSTM
 `SCALER_PATH`: File path where the MinMaxScaler object is saved
@@ -60,6 +60,8 @@ Use the dataset created with the script `create_dataSet`
 `VALIDATION_RESULTS_PATH`: File path where Validation Result
 `LOG_FILE_PATH`: File path where Logs
 `PLOT_FILE_PATH`: Path to the file where the graphs are located
+
+## Customizable Parameters
 
 `OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
 `VALIDATION_THRESHOLD`: Error threshold to enable retraining

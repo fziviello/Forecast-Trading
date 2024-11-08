@@ -11,20 +11,12 @@ from datetime import datetime,timedelta
 import pytz
 import mplfinance as mpf
 import logging
-
-MODEL_PATH = 'lstm_trading_model.h5'
-SCALER_PATH = 'scaler.pkl'
-DATASET_PATH = 'DATASET_AUDJPY.csv'
-FORECAST_RESULTS_PATH = 'forecast_trading.csv'
-VALIDATION_RESULTS_PATH = 'forecast_validation.csv'
-LOG_FILE_PATH = 'forecast_trading.log'
-PLOT_FILE_PATH = 'forecast_trading.png'
+import argparse
 
 MARGIN_PROFIT = 0.002
 LEVERAGE = 0.01
 UNIT = 1000
 EXCHANGE_RATE = 1.0
-DATA_MODEL_RATE = "AUD"
 FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 10
 VALIDATION_THRESHOLD = 0.1
@@ -32,12 +24,12 @@ VALIDATION_THRESHOLD = 0.1
 GENERATE_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 
-logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 def calculator_profit(predicted_take_profit, predicted_entry_price):
+    global UNIT, LEVERAGE, EXCHANGE_RATE
     return round(abs((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE), 2)
             
 def calculator_loss(predicted_stop_loss, predicted_entry_price):
+    global UNIT, LEVERAGE, EXCHANGE_RATE
     return round((predicted_entry_price - predicted_stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
 
 def exchange_currency(base, target):
@@ -55,6 +47,7 @@ def exchange_currency(base, target):
         return None
 
 def load_and_preprocess_data():
+    global DATASET_PATH
     df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
     df.set_index('Datetime', inplace=True)
 
@@ -167,6 +160,7 @@ def plot_forex_candlestick(df, predictions):
     mpf.show()
 
 def run_trading_model():
+    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger']].values
@@ -266,8 +260,26 @@ def run_trading_model():
         plot_forex_candlestick(df, predictions)
 
 if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
+    parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
+    args = parser.parse_args()
+    SYMBOL = args.symbol
+    
+    MODEL_PATH = "lstm_trading_model_" + SYMBOL + ".h5"
+    SCALER_PATH = "scaler_" + SYMBOL + ".pkl"
+    FORECAST_RESULTS_PATH = "forecast_trading_" + SYMBOL + ".csv"
+    VALIDATION_RESULTS_PATH = "forecast_validation_" + SYMBOL + ".csv"
+    LOG_FILE_PATH = "forecast_trading_" + SYMBOL + ".log"
+    PLOT_FILE_PATH = "forecast_trading_" + SYMBOL + ".png"
+    DATASET_PATH = "DATASET_" + SYMBOL + ".csv"
+    DATA_MODEL_RATE = SYMBOL[:3]
+    
     rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE)
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
 
+    logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     run_trading_model()
+    

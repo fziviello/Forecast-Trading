@@ -25,7 +25,7 @@ The data can be visualized in a candlestick chart and saved to a CSV file.
 
 - Retrieves historical Forex data for a specified symbol.
 - Visualizes the data in a candlestick chart if enabled.
-- Saves the data to a CSV file.
+- Saves the data to a CSV file named `DATASET_{SYMBOL}.csv`
 
 ## Customizable Parameters
 
@@ -33,8 +33,6 @@ The script contains several parameters that you can modify to suit your needs:
 
 - `GENERATE_PLOT`: True/False
 - `SYMBOL`: The Name of Stock Exchange Symbol
-- `CSVNAME`: File path where saved DataSet
-- `PLOTNAME`: Graph file name
 - `INTERVAL`: Dataset Range (suggested 30m or 1h)
 
 # Forecast BOT

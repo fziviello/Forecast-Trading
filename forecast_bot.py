@@ -14,7 +14,7 @@ import logging
 
 MODEL_PATH = 'lstm_trading_model.h5'
 SCALER_PATH = 'scaler.pkl'
-DATASET_PATH = 'forex_data.csv'
+DATASET_PATH = 'DATASET_AUDJPY.csv'
 FORECAST_RESULTS_PATH = 'forecast_trading.csv'
 VALIDATION_RESULTS_PATH = 'forecast_validation.csv'
 LOG_FILE_PATH = 'forecast_trading.log'

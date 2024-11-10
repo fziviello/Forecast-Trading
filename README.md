@@ -34,6 +34,7 @@ The script contains several parameters that you can modify to suit your needs:
 - `GENERATE_PLOT`: True/False
 - `SYMBOL`: The Name of Stock Exchange Symbol
 - `INTERVAL`: Dataset Range (suggested 30m or 1h)
+- `RETRY_LIMIT`: Times to retry in case of error
 
 # Forecast BOT
 

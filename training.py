@@ -8,7 +8,7 @@ from datetime import datetime
 LOG_FOLDER = 'LOGS'
 LOG_FILE_PATH = 'scheduler.log'
 SCRIPT_CREATE_DATASET = "create_dataSet.py"
-SCRIPT_FORECAST = "forecast_bot.py --symbol AUDJPY"
+SCRIPT_FORECAST = ["forecast_bot.py", "--symbol", "AUDJPY"]
 TIME_MINUTE_REPEAT = 40
 N_REPEAT = 5
 
@@ -28,10 +28,12 @@ def run_scripts(SCRIPT_CREATE_DATASET, SCRIPT_FORECAST):
         text=True
     )
 
-    for line in process1.stdout:
-        print(line, end='', flush=True)
-    for line in process1.stderr:
-        logging.error(line.strip())
+    if process1.stdout:
+        for line in process1.stdout:
+            print(line, end='', flush=True)
+    if process1.stderr:
+        for line in process1.stderr:
+            logging.error(line.strip())
 
     process1.stdout.close()
     process1.stderr.close()
@@ -39,17 +41,19 @@ def run_scripts(SCRIPT_CREATE_DATASET, SCRIPT_FORECAST):
 
     print(f"\n\033[93m*** Avvio Forecast\033[0m\n")
     process2 = subprocess.Popen(
-        ["python", SCRIPT_FORECAST],
+        ["python"] + SCRIPT_FORECAST,  # Lista di argomenti per evitare errori
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
         text=True
     )
 
-    for line in process2.stdout:
-        print(line, end='', flush=True)
-    for line in process2.stderr:
-        logging.error(line.strip())
+    if process2.stdout:
+        for line in process2.stdout:
+            print(line, end='', flush=True)
+    if process2.stderr:
+        for line in process2.stderr:
+            logging.error(line.strip())
 
     process2.stdout.close()
     process2.stderr.close()

@@ -212,15 +212,15 @@ def run_trading_model():
     else:
         model = Sequential([
             Input(shape=(X_train.shape[1], X_train.shape[2])),
-            LSTM(units=50, return_sequences=True),
+            LSTM(units=75, return_sequences=True),
             Dropout(0.2),
-            LSTM(units=50, return_sequences=False),
+            LSTM(units=75, return_sequences=False),
             Dropout(0.2),
             Dense(units=1, activation='sigmoid')
         ])
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-        model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
+        model.fit(X_train, y_train, epochs=75, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
         model.save(MODEL_PATH)
 
     predictions = (model.predict(X_test) > 0.5).astype(int)

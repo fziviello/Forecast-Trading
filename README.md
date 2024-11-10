@@ -12,10 +12,14 @@ The script contains several parameters that you can modify to suit your needs:
 - `LOG_FILE_PATH`: File path where Logs
 - `TIME_MINUTE_REPEAT`: Interval expressed in minutes of the schedule
 - `N_REPEAT`: Number of repetitions
-  
+
+## Args Parameters
+
+- `SYMBOL`: The Name of Stock Exchange Symbol separated by comma for multi-currency training (--symbol) *REQUIRED
+
 ## Run
 
-- Start Training : `python3 training.py`
+- Start Training : `python3 training.py --symbol AUDJPY,AUDCHF`
 
 # DataSet Generator
 
@@ -36,11 +40,18 @@ The script contains several parameters that you can modify to suit your needs:
 - `LOG_FILE_PATH`: File path where Logs
 - `DATA_FOLDER`:  Dir path script create dataset
 - `PLOT_FOLDER`: 'Dir path script create plot
-- `GENERATE_PLOT`: If True Make the plot
 - `SHOW_PLOT`: If True Show the plot
-- `SYMBOL`: The Name of Stock Exchange Symbol
-- `INTERVAL`: Dataset Range (suggested 30m or 1h)
 - `RETRY_LIMIT`: Times to retry in case of error
+
+## Args Parameters
+
+- `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+- `INTERVAL`: Dataset Range (--interval)
+- `GENERATE_PLOT`: If True Make the plot (--plot)
+
+## Run
+
+- Create DataSet: `python3 create_dataSet.py --symbol AUDJPY`
 
 # Forecast BOT
 
@@ -91,6 +102,17 @@ Use the dataset created with the script `create_dataSet`
 - `FAVORITE_RATE`: Preferred conversion currency
 - `N_PREDICTIONS`: The maximum number of predictions to generate.
 
+## Args Parameters
+
+- `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+- `FAVORITE_RATE`: Favorite conversion rate (--favoriteRate) (default EUR)
+- `INTERVAL_MINUTES`: Interval expressed in minutes to align with the dataset (--interval)
+- `GENERATE_PLOT`: If True Make the plot (--plot)
+
+## Run
+
+- Start Forecast: `python3 forecast_bot.py --symbol AUDJPY`
+
 ## Requirements
 
 Make sure to have the following libraries installed:
@@ -106,7 +128,7 @@ Make sure to have the following libraries installed:
 
 ### Use Venv
 
-- `python3 -m venv .venv `
+- `python3 -m venv .venv`
 - `source .venv/bin/activate`
 - `.venv/bin/python`
 
@@ -119,11 +141,6 @@ You can install them using pip:
 - The notebook can be modified to analyze other forex pairs by simply changing the value of SYMBOL.
 
 - To periodically update the dataset, the notebook can be scheduled to run automatically with a task scheduler or other automation tools.
-
-## Run
-
-- Create DataSet: `python3 create_dataSet.py`
-- Start Forecast: `python3 forecast_bot.py`
 
 ![screenshot1](/Screenshot_1.png?raw=true)
 

@@ -20,13 +20,14 @@ EXCHANGE_RATE = 1.0
 FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 10
 VALIDATION_THRESHOLD = 0.1
+INTERVAL_MINUTES = 2
 
 MODELS_FOLDER = 'MODELS'
 DATA_FOLDER = 'DATASET'
 RESULTS_FOLDER = 'RESULTS'
 PLOT_FOLDER = 'PLOT'
 LOG_FOLDER = 'LOGS'
-LOG_FILE_PATH = 'forecast_trading.log'
+LOG_FILE_PATH = 'forecast_bot.log'
 GENERATE_PLOT = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
@@ -47,10 +48,6 @@ if not os.path.exists(RESULTS_FOLDER):
 if not os.path.exists(DATA_FOLDER):
     os.makedirs(DATA_FOLDER)
     print(f"\033[92mCartella '{DATA_FOLDER}' creata con successo.\033[0m")
-
-if not os.path.exists(PLOT_FOLDER) and GENERATE_PLOT:
-    os.makedirs(PLOT_FOLDER)
-    print(f"\033[92mCartella '{PLOT_FOLDER}' creata con successo.\033[0m")      
     
 logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -191,7 +188,7 @@ def plot_forex_candlestick(df, predictions):
         mpf.show()
 
 def run_trading_model():
-    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING
+    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger']].values
@@ -242,15 +239,15 @@ def run_trading_model():
 
         data_obj = datetime.now()
         data_utc = data_obj.replace(tzinfo=pytz.UTC)
-        data_utc = data_utc - timedelta(minutes=30)  # Sottraggo 30m per essere allineato al dataset
+        data_utc = data_utc - timedelta(minutes=INTERVAL_MINUTES)  # Sottraggo i minuti definiti nel dataset per essere allineato
         data_formatted = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
 
         results.append({
             'Data Previsione': data_formatted,
             'Tipo': f"{order_type} {order_class}",
-            'Prezzo': f"{entry_price:.3f}",
-            'Stop Loss': f"{stop_loss:.3f}",
-            'Take Profit': f"{take_profit:.3f}",
+            'Prezzo': f"{entry_price:.5f}",
+            'Stop Loss': f"{stop_loss:.5f}",
+            'Take Profit': f"{take_profit:.5f}",
             'Guadagno': f"{hypothetical_profit:.2f}€",
             'Perdita': f"{hypothetical_loss:.2f}€"
         })
@@ -294,9 +291,25 @@ def run_trading_model():
 if __name__ == "__main__":
         
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
+    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
+    parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
+    parser.add_argument("--favoriteRate", type=str, required=False, help="Inserire il rate di conversione")
     parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
     args = parser.parse_args()
-    SYMBOL = args.symbol
+    SYMBOL = (args.symbol).upper()
+    
+    if args.interval is not None :
+        FAVORITE_RATE = args.favoriteRate
+    
+    if args.interval is not None :
+        INTERVAL_MINUTES = args.interval
+        
+    if args.plot is not None:
+        GENERATE_PLOT = args.plot
+        
+    if not os.path.exists(PLOT_FOLDER) and GENERATE_PLOT:
+        os.makedirs(PLOT_FOLDER)
+        print(f"\033[92mCartella '{PLOT_FOLDER}' creata con successo.\033[0m")      
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
@@ -309,6 +322,7 @@ if __name__ == "__main__":
     DATA_MODEL_RATE = SYMBOL[:3]
     
     rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE)
+    
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
 

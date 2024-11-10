@@ -8,6 +8,7 @@ The script contains several parameters that you can modify to suit your needs:
 
 - `SCRIPT_CREATE_DATASET`: File path script create dataset
 - `SCRIPT_FORECAST`: File path script forecast
+- `LOG_FOLDER`:  Dir path script create logs
 - `LOG_FILE_PATH`: File path where Logs
 - `TIME_MINUTE_REPEAT`: Interval expressed in minutes of the schedule
 - `N_REPEAT`: Number of repetitions
@@ -31,7 +32,12 @@ The data can be visualized in a candlestick chart and saved to a CSV file.
 
 The script contains several parameters that you can modify to suit your needs:
 
-- `GENERATE_PLOT`: True/False
+- `LOG_FOLDER`:  Dir path script create logs
+- `LOG_FILE_PATH`: File path where Logs
+- `DATA_FOLDER`:  Dir path script create dataset
+- `PLOT_FOLDER`: 'Dir path script create plot
+- `GENERATE_PLOT`: If True Make the plot
+- `SHOW_PLOT`: If True Show the plot
 - `SYMBOL`: The Name of Stock Exchange Symbol
 - `INTERVAL`: Dataset Range (suggested 30m or 1h)
 - `RETRY_LIMIT`: Times to retry in case of error
@@ -54,28 +60,36 @@ Use the dataset created with the script `create_dataSet`
 
 ## Dynamic Parameters
 
-`MODEL_PATH`: File path where the trained LSTM
-`SCALER_PATH`: File path where the MinMaxScaler object is saved
-`FORECAST_RESULTS_PATH`: File path where Forecast Result
-`DATASET_PATH`: File path where DataSet
-`VALIDATION_RESULTS_PATH`: File path where Validation Result
-`LOG_FILE_PATH`: File path where Logs
-`PLOT_FILE_PATH`: Path to the file where the graphs are located
+- `MODEL_PATH`: File path where the trained LSTM
+- `SCALER_PATH`: File path where the MinMaxScaler object is saved
+- `FORECAST_RESULTS_PATH`: File path where Forecast Result
+- `DATASET_PATH`: File path where DataSet
+- `VALIDATION_RESULTS_PATH`: File path where Validation Result
+- `LOG_FILE_PATH`: File path where Logs
+- `PLOT_FILE_PATH`: Path to the file where the graphs are located
+- `REPEAT_TRAINING`: If True restarts model training
 
 ## Customizable Parameters
 
-`OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
-`VALIDATION_THRESHOLD`: Error threshold to enable retraining
+- `MODELS_FOLDER`:  Dir path script create models
+- `DATA_FOLDER`:  Dir path script import dataset
+- `RESULTS_FOLDER`: Dir path script save predictions and validation
+- `LOG_FOLDER`:  Dir path script create logs
+- `PLOT_FOLDER`: 'Dir path script create plot
+- `OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
+- `VALIDATION_THRESHOLD`: Error threshold to enable retraining
+- `GENERATE_PLOT`: If True Make the plot
+- `SHOW_PLOT`: If True Show the plot
 
 ### Business Parameters
 
-`MARGIN_PROFIT`: The profit margin to calculate take profit levels.
-`LEVERAGE`: The leverage to apply to trades.
-`UNIT`: The number of units traded.
-`EXCHANGE_RATE`: The exchange rate for profit calculations.
-`DATA_MODEL_RATE`: Model reference currency
-`FAVORITE_RATE`: Preferred conversion currency
-`N_PREDICTIONS`: The maximum number of predictions to generate.
+- `MARGIN_PROFIT`: The profit margin to calculate take profit levels.
+- `LEVERAGE`: The leverage to apply to trades.
+- `UNIT`: The number of units traded.
+- `EXCHANGE_RATE`: The exchange rate for profit calculations.
+- `DATA_MODEL_RATE`: Model reference currency
+- `FAVORITE_RATE`: Preferred conversion currency
+- `N_PREDICTIONS`: The maximum number of predictions to generate.
 
 ## Requirements
 

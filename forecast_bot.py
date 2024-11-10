@@ -3,7 +3,7 @@ import numpy as np
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, Dense, Dropout
+from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 import os
@@ -21,8 +21,38 @@ FAVORITE_RATE = "EUR"
 N_PREDICTIONS = 10
 VALIDATION_THRESHOLD = 0.1
 
+MODELS_FOLDER = 'MODELS'
+DATA_FOLDER = 'DATASET'
+RESULTS_FOLDER = 'RESULTS'
+PLOT_FOLDER = 'PLOT'
+LOG_FOLDER = 'LOGS'
+LOG_FILE_PATH = 'forecast_trading.log'
 GENERATE_PLOT = False
+SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
+REPEAT_TRAINING = False
+
+if not os.path.exists(LOG_FOLDER):
+    os.makedirs(LOG_FOLDER)
+    print(f"\033[92mCartella '{LOG_FOLDER}' creata con successo.\033[0m")
+    
+if not os.path.exists(MODELS_FOLDER):
+    os.makedirs(MODELS_FOLDER)
+    print(f"\033[92mCartella '{MODELS_FOLDER}' creata con successo.\033[0m")    
+
+if not os.path.exists(RESULTS_FOLDER):
+    os.makedirs(RESULTS_FOLDER)
+    print(f"\033[92mCartella '{RESULTS_FOLDER}' creata con successo.\033[0m")    
+
+if not os.path.exists(DATA_FOLDER):
+    os.makedirs(DATA_FOLDER)
+    print(f"\033[92mCartella '{DATA_FOLDER}' creata con successo.\033[0m")
+
+if not os.path.exists(PLOT_FOLDER) and GENERATE_PLOT:
+    os.makedirs(PLOT_FOLDER)
+    print(f"\033[92mCartella '{PLOT_FOLDER}' creata con successo.\033[0m")      
+    
+logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def calculator_profit(predicted_take_profit, predicted_entry_price):
     global UNIT, LEVERAGE, EXCHANGE_RATE
@@ -155,12 +185,13 @@ def plot_forex_candlestick(df, predictions):
     mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
              ylabel='Prezzo', savefig=PLOT_FILE_PATH, volume=False, show_nontrading=False)
 
-    mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
+    if SHOW_PLOT:
+        mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
              ylabel='Prezzo', volume=False, show_nontrading=False)
-    mpf.show()
+        mpf.show()
 
 def run_trading_model():
-    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH
+    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger']].values
@@ -183,7 +214,8 @@ def run_trading_model():
         model = load_model(MODEL_PATH)
     else:
         model = Sequential([
-            LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
+            Input(shape=(X_train.shape[1], X_train.shape[2])),
+            LSTM(units=50, return_sequences=True),
             Dropout(0.2),
             LSTM(units=50, return_sequences=False),
             Dropout(0.2),
@@ -260,26 +292,25 @@ def run_trading_model():
         plot_forex_candlestick(df, predictions)
 
 if __name__ == "__main__":
-    
+        
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
     parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
     args = parser.parse_args()
     SYMBOL = args.symbol
     
-    MODEL_PATH = "lstm_trading_model_" + SYMBOL + ".h5"
-    SCALER_PATH = "scaler_" + SYMBOL + ".pkl"
-    FORECAST_RESULTS_PATH = "forecast_trading_" + SYMBOL + ".csv"
-    VALIDATION_RESULTS_PATH = "forecast_validation_" + SYMBOL + ".csv"
-    LOG_FILE_PATH = "forecast_trading_" + SYMBOL + ".log"
-    PLOT_FILE_PATH = "forecast_trading_" + SYMBOL + ".png"
-    DATASET_PATH = "DATASET_" + SYMBOL + ".csv"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+    MODEL_PATH = os.path.join(MODELS_FOLDER, f"lstm_trading_model_{SYMBOL}.h5")
+    SCALER_PATH = os.path.join(MODELS_FOLDER, f"scaler_{SYMBOL}.pkl")
+    FORECAST_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_trading_{SYMBOL}.csv")
+    VALIDATION_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_validation_{SYMBOL}.csv")
+    PLOT_FILE_PATH = os.path.join(PLOT_FOLDER, f"forecast_trading_{SYMBOL}_{timestamp}.png")
+    DATASET_PATH = os.path.join(DATA_FOLDER, f"DATASET_{SYMBOL}.csv")
     DATA_MODEL_RATE = SYMBOL[:3]
     
     rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE)
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
-
-    logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
     run_trading_model()
     

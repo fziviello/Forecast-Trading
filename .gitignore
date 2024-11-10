@@ -6,6 +6,13 @@ venv/
 *.pyc
 __pycache__/
 
+# Ignora le cartelle
+DATASET
+LOGS
+MODELS
+PLOT
+RESULTS
+
 # Ignora file
 *.log
 *.csv

@@ -1,17 +1,23 @@
+import os
 import subprocess
 import schedule
 import logging
 import time
 from datetime import datetime
 
+LOG_FOLDER = 'LOGS'
+LOG_FILE_PATH = 'scheduler.log'
 SCRIPT_CREATE_DATASET = "create_dataSet.py"
 SCRIPT_FORECAST = "forecast_bot.py --symbol AUDJPY"
-LOG_FILE_PATH = 'scheduler.log'
 TIME_MINUTE_REPEAT = 40
 N_REPEAT = 5
 
-logging.basicConfig(filename=LOG_FILE_PATH, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+if not os.path.exists(LOG_FOLDER):
+    os.makedirs(LOG_FOLDER)
+    print(f"\033[92mCartella '{LOG_FOLDER}' creata con successo.\033[0m")
     
+logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+   
 def run_scripts(SCRIPT_CREATE_DATASET, SCRIPT_FORECAST):
     print(f"\033[93m*** Avvio Creazione del DataSet\033[0m\n")
     process1 = subprocess.Popen(

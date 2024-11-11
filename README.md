@@ -113,6 +113,24 @@ Use the dataset created with the script `create_dataSet`
 
 - Start Forecast: `python3 forecast_bot.py --symbol AUDJPY`
 
+# Calculate Statistics
+
+This script calculates the statistics obtained by the model during its training.
+
+## Customizable Parameters
+
+- `LOG_FOLDER`:  Dir path script create logs
+- `LOG_FILE_PATH`: File path script create logs
+- `PREFIX_VALIDATION`: Validation file name prefix 
+
+## Args Parameters
+
+- `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+
+## Run
+
+- Start Get Statistics: `python3 get_statistics.py --symbol AUDJPY`
+
 ## Requirements
 
 Make sure to have the following libraries installed:

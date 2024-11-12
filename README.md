@@ -120,6 +120,13 @@ This script calculates the statistics obtained by the model during its training.
 
 `pip3 install -r requirements.txt`
 
+if you have problems installing ta-lib proceed as follows
+- `brew install ta-lib`
+- `TA_INCLUDE_PATH=$(brew --prefix ta-lib)/include`
+- `TA_LIBRARY_PATH=$(brew --prefix ta-lib)/lib`
+- `CFLAGS="-I$TA_INCLUDE_PATH" LDFLAGS="-L$TA_LIBRARY_PATH" pip install ta-lib`
+
+
 ![screenshot1](/Screenshot_1.png?raw=true)
 
 ![screenshot1](/Screenshot_2.png?raw=true)

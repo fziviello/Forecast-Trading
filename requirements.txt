@@ -33,6 +33,7 @@ jupyter_core==5.7.2
 keras==3.6.0
 kiwisolver==1.4.7
 libclang==18.1.1
+llvmlite==0.43.0
 lxml==5.3.0
 Markdown==3.7
 markdown-it-py==3.0.0
@@ -78,6 +79,8 @@ simplejson==3.19.3
 six==1.16.0
 soupsieve==2.6
 stack-data==0.6.3
+ta==0.11.0
+TA-Lib==0.4.32
 tensorboard==2.16.2
 tensorboard-data-server==0.7.2
 tensorflow==2.16.2

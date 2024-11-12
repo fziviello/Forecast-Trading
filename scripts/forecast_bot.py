@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
+import talib
 import joblib
 import os
 from datetime import datetime,timedelta
@@ -13,7 +14,7 @@ import mplfinance as mpf
 import logging
 import argparse
 import itertools
-
+import time
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
 from config import MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
 
@@ -86,35 +87,143 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
         logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
     
 def grid_search_optimization(X_train, y_train, X_test, y_test):
+    start_time = time.time()
     for units, dropout, epochs in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs']):
         print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
         logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
         create_model(X_train, y_train, X_test, y_test, units, dropout, epochs)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    hours, remainder = divmod(elapsed_time, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    print(f"\033[93m\nTempo di elaborazione migliore configurazione: {int(hours):02}:{int(minutes):02}:{int(seconds):02}\n\033[0m")
+    logging.info(f"Tempo di elaborazione migliore configurazione: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
+
+def calculate_parabolic_sar(df, af=0.02, max_af=0.2):
+    df['SAR'] = df['Close'].copy()
+    df['Trend'] = 1
+    df['EP'] = df['Close']
+    df['AF'] = af 
+
+    for i in range(1, len(df)):
+        prev_sar = df['SAR'].iloc[i-1]
+        prev_trend = df['Trend'].iloc[i-1]
+        prev_ep = df['EP'].iloc[i-1]
+        prev_af = df['AF'].iloc[i-1]
+
+        # Se è un uptrend
+        if prev_trend == 1:
+            # SAR = SAR_prev + AF * (EP - SAR_prev)
+            df.at[i, 'SAR'] = prev_sar + prev_af * (prev_ep - prev_sar)
+            
+            if df['Low'].iloc[i] < df['SAR'].iloc[i]:
+                df.at[i, 'Trend'] = -1
+                df.at[i, 'SAR'] = prev_ep
+                df.at[i, 'EP'] = df['Low'].iloc[i]
+                df.at[i, 'AF'] = af
+
+            else:
+                df.at[i, 'EP'] = max(prev_ep, df['High'].iloc[i])
+                new_af = min(prev_af + af, max_af)
+                df.at[i, 'AF'] = new_af
+
+        # Se è un downtrend
+        else:
+            # SAR = SAR_prev + AF * (SAR_prev - EP)
+            df.at[i, 'SAR'] = prev_sar + prev_af * (prev_sar - prev_ep)
+            
+            if df['High'].iloc[i] > df['SAR'].iloc[i]: 
+                df.at[i, 'Trend'] = 1
+                df.at[i, 'SAR'] = prev_ep
+                df.at[i, 'EP'] = df['High'].iloc[i]
+                df.at[i, 'AF'] = af
+            else:
+                df.at[i, 'EP'] = min(prev_ep, df['Low'].iloc[i])
+                new_af = min(prev_af + af, max_af)
+                df.at[i, 'AF'] = new_af
+
+    return df['SAR']
 
 def load_and_preprocess_data():
     global DATASET_PATH
     df = pd.read_csv(DATASET_PATH, parse_dates=['Datetime'])
     df.set_index('Datetime', inplace=True)
 
+    # Media mobile semplice (SMA)
     df['MA20'] = df['Close'].rolling(window=20).mean()
     df['MA50'] = df['Close'].rolling(window=50).mean()
+
+    # Volatilità come deviazione standard delle chiusure (Volatility)
     df['Volatility'] = df['Close'].rolling(window=20).std()
-    
+
+    # RSI (Relative Strength Index)
     delta = df['Close'].diff(1)
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()  # Guadagno medio
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()  # Perdita media
     df['RSI'] = 100 - (100 / (1 + gain / loss))
 
+    # MACD (Moving Average Convergence Divergence)
     df['MACD'] = df['Close'].ewm(span=12, adjust=False).mean() - df['Close'].ewm(span=26, adjust=False).mean()
     df['Signal Line'] = df['MACD'].ewm(span=9, adjust=False).mean()
 
+    # Bollinger Bands
     df['Upper Bollinger'] = df['MA20'] + 2 * df['Volatility']
     df['Lower Bollinger'] = df['MA20'] - 2 * df['Volatility']
-    
+
+    # Stochastic Oscillator
+    low_min = df['Low'].rolling(window=14).min()
+    high_max = df['High'].rolling(window=14).max()
+    df['Stochastic Oscillator'] = (df['Close'] - low_min) / (high_max - low_min) * 100
+
+    # Average True Range (ATR)
+    df['High-Low'] = df['High'] - df['Low']
+    df['High-Close'] = abs(df['High'] - df['Close'].shift())
+    df['Low-Close'] = abs(df['Low'] - df['Close'].shift())
+    df['True Range'] = df[['High-Low', 'High-Close', 'Low-Close']].max(axis=1)
+    df['ATR'] = df['True Range'].rolling(window=14).mean()
+
+    # Parabolic SAR (Stop and Reverse)
+    #df['SAR'] = calculate_parabolic_sar(df)
+    df['SAR'] = talib.SAR(df['High'], df['Low'], acceleration=0.02, maximum=0.2)
+
+    # Average Directional Index (ADX)
+    df['ADX'] = calculate_adx(df)
+
+    # Creazione del target per la previsione
     df['Target'] = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+    
+    # Rimuove eventuali valori NaN
     df.dropna(inplace=True)
     
     return df
+
+def calculate_adx(df, window=14):
+    df['High-Low'] = df['High'] - df['Low']
+    df['High-PrevClose'] = abs(df['High'] - df['Close'].shift(1))
+    df['Low-PrevClose'] = abs(df['Low'] - df['Close'].shift(1))
+
+    df['+DM'] = np.where((df['High'] - df['High'].shift(1)) > (df['Low'] - df['Low'].shift(1)), 
+                         df['High'] - df['High'].shift(1), 0)
+    df['-DM'] = np.where((df['Low'].shift(1) - df['Low']) > (df['High'].shift(1) - df['High']), 
+                         df['Low'].shift(1) - df['Low'], 0)
+
+    df['TR'] = df[['High-Low', 'High-PrevClose', 'Low-PrevClose']].max(axis=1)
+
+    df['TR14'] = df['TR'].rolling(window=window).sum()
+    df['+DM14'] = df['+DM'].rolling(window=window).sum()
+    df['-DM14'] = df['-DM'].rolling(window=window).sum()
+
+    df['+DI'] = 100 * (df['+DM14'] / df['TR14'])
+    df['-DI'] = 100 * (df['-DM14'] / df['TR14'])
+
+    df['DX'] = 100 * (abs(df['+DI'] - df['-DI']) / (df['+DI'] + df['-DI']))
+
+    df['ADX'] = df['DX'].rolling(window=window).mean()
+
+    return df['ADX']
 
 def create_sequences(X, y, time_steps=30):
     X_seq, y_seq = [], []
@@ -209,7 +318,10 @@ def run_trading_model():
     global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
-    X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger']].values
+    X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 
+        'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger', 'ATR',
+        'SAR', 'Stochastic Oscillator', 'ADX']].values
+
     y = df['Target']
 
     if os.path.exists(SCALER_PATH):
@@ -228,18 +340,9 @@ def run_trading_model():
     if os.path.exists(MODEL_PATH) and not REPEAT_TRAINING:
         model = load_model(MODEL_PATH)
     else:
-        model = Sequential([
-            Input(shape=(X_train.shape[1], X_train.shape[2])),
-            LSTM(units=75, return_sequences=True),
-            Dropout(0.2),
-            LSTM(units=75, return_sequences=False),
-            Dropout(0.2),
-            Dense(units=1, activation='sigmoid')
-        ])
-        
         grid_search_optimization(X_train, y_train, X_test, y_test)  
         model = BEST_MODEL
-        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\033[0m")
+        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\n\033[0m")
         logging.info(f"Migliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
         model.save(MODEL_PATH)
        
@@ -343,4 +446,3 @@ if __name__ == "__main__":
         EXCHANGE_RATE = rate_exchange
 
     run_trading_model()
-    

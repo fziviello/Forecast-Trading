@@ -4,12 +4,8 @@ The script contains that schedules model training
 
 ## Customizable Parameters
 
-The script contains several parameters that you can modify to suit your needs:
+You can change them in the config.py file
 
-- `SCRIPT_CREATE_DATASET`: File path script create dataset
-- `SCRIPT_FORECAST`: File path script forecast
-- `LOG_FOLDER`:  Dir path script create logs
-- `LOG_FILE_PATH`: File path where Logs
 - `TIME_MINUTE_REPEAT`: Interval expressed in minutes of the schedule
 - `N_REPEAT`: Number of repetitions
 
@@ -36,10 +32,6 @@ The data can be visualized in a candlestick chart and saved to a CSV file.
 
 The script contains several parameters that you can modify to suit your needs:
 
-- `LOG_FOLDER`:  Dir path script create logs
-- `LOG_FILE_PATH`: File path where Logs
-- `DATA_FOLDER`:  Dir path script create dataset
-- `PLOT_FOLDER`: 'Dir path script create plot
 - `SHOW_PLOT`: If True Show the plot
 - `RETRY_LIMIT`: Times to retry in case of error
 
@@ -67,32 +59,21 @@ This script implements a Long Short-Term Memory (LSTM) neural network for predic
 - Early Stopping: Implements early stopping to prevent overfitting during model training.
 
 ## Usage
+
 Use the dataset created with the script `create_dataSet`
 
 ## Dynamic Parameters
 
-- `MODEL_PATH`: File path where the trained LSTM
-- `SCALER_PATH`: File path where the MinMaxScaler object is saved
-- `FORECAST_RESULTS_PATH`: File path where Forecast Result
-- `DATASET_PATH`: File path where DataSet
-- `VALIDATION_RESULTS_PATH`: File path where Validation Result
-- `LOG_FILE_PATH`: File path where Logs
-- `PLOT_FILE_PATH`: Path to the file where the graphs are located
 - `REPEAT_TRAINING`: If True restarts model training
 
 ## Customizable Parameters
 
-- `MODELS_FOLDER`:  Dir path script create models
-- `DATA_FOLDER`:  Dir path script import dataset
-- `RESULTS_FOLDER`: Dir path script save predictions and validation
-- `LOG_FOLDER`:  Dir path script create logs
-- `PLOT_FOLDER`: 'Dir path script create plot
-- `OVERWRITE_FORECAST_CSV`: Set to True to overwrite the existing predictions CSV; False to append.
-- `VALIDATION_THRESHOLD`: Error threshold to enable retraining
 - `GENERATE_PLOT`: If True Make the plot
 - `SHOW_PLOT`: If True Show the plot
 
 ### Business Parameters
+
+You can change them in the config.py file
 
 - `MARGIN_PROFIT`: The profit margin to calculate take profit levels.
 - `LEVERAGE`: The leverage to apply to trades.
@@ -119,8 +100,6 @@ This script calculates the statistics obtained by the model during its training.
 
 ## Customizable Parameters
 
-- `LOG_FOLDER`:  Dir path script create logs
-- `LOG_FILE_PATH`: File path script create logs
 - `PREFIX_VALIDATION`: Validation file name prefix 
 
 ## Args Parameters
@@ -131,34 +110,15 @@ This script calculates the statistics obtained by the model during its training.
 
 - Start Get Statistics: `python3 scripts/get_statistics.py --symbol AUDJPY`
 
-## Requirements
-
-Make sure to have the following libraries installed:
-
-- `yfinance`
-- `finplot`
-- `pandas`
-- `numpy`
-- `joblib`  
-- `scikit-learn`  
-- `matplotlib`  
-- `tensorflow`  
-
 ### Use Venv
 
 - `python3 -m venv .venv`
 - `source .venv/bin/activate`
 - `.venv/bin/python`
 
-You can install them using pip:
+## Requirements
 
 `pip3 install -r requirements.txt`
-
-## Use Notebook
-
-- The notebook can be modified to analyze other forex pairs by simply changing the value of SYMBOL.
-
-- To periodically update the dataset, the notebook can be scheduled to run automatically with a task scheduler or other automation tools.
 
 ![screenshot1](/Screenshot_1.png?raw=true)
 

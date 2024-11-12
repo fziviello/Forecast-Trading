@@ -14,45 +14,17 @@ import mplfinance as mpf
 import logging
 import argparse
 
-MARGIN_PROFIT = 0.002
-LEVERAGE = 0.01
-UNIT = 1000
-EXCHANGE_RATE = 1.0
-FAVORITE_RATE = "EUR"
-N_PREDICTIONS = 10
-VALIDATION_THRESHOLD = 0.1
-INTERVAL_MINUTES = 2
+from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
+from config import MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
 
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-MODELS_FOLDER = BASE_PATH + '/models'
-DATA_FOLDER = BASE_PATH + '/dataset'
-RESULTS_FOLDER = BASE_PATH + '/results'
-PLOT_FOLDER = BASE_PATH + '/plots'
-LOG_FOLDER = BASE_PATH + '/logs'
-LOG_FILE_PATH = 'forecast_bot.log'
 GENERATE_PLOT = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
 
-if not os.path.exists(LOG_FOLDER):
-    os.makedirs(LOG_FOLDER)
-    print(f"\033[92mCartella '{LOG_FOLDER}' creata con successo.\033[0m")
+setup_folders()
     
-if not os.path.exists(MODELS_FOLDER):
-    os.makedirs(MODELS_FOLDER)
-    print(f"\033[92mCartella '{MODELS_FOLDER}' creata con successo.\033[0m")    
-
-if not os.path.exists(RESULTS_FOLDER):
-    os.makedirs(RESULTS_FOLDER)
-    print(f"\033[92mCartella '{RESULTS_FOLDER}' creata con successo.\033[0m")    
-
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
-    print(f"\033[92mCartella '{DATA_FOLDER}' creata con successo.\033[0m")
-    
-logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_FORECAST_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def calculator_profit(predicted_take_profit, predicted_entry_price):
     global UNIT, LEVERAGE, EXCHANGE_RATE
@@ -309,18 +281,14 @@ if __name__ == "__main__":
         
     if args.plot is not None:
         GENERATE_PLOT = args.plot
-        
-    if not os.path.exists(PLOT_FOLDER) and GENERATE_PLOT:
-        os.makedirs(PLOT_FOLDER)
-        print(f"\033[92mCartella '{PLOT_FOLDER}' creata con successo.\033[0m")      
-    
+            
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
     MODEL_PATH = os.path.join(MODELS_FOLDER, f"lstm_trading_model_{SYMBOL}.h5")
     SCALER_PATH = os.path.join(MODELS_FOLDER, f"scaler_{SYMBOL}.pkl")
     FORECAST_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_trading_{SYMBOL}.csv")
     VALIDATION_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_validation_{SYMBOL}.csv")
-    PLOT_FILE_PATH = os.path.join(PLOT_FOLDER, f"forecast_trading_{SYMBOL}_{timestamp}.png")
+    PLOT_FILE_PATH = os.path.join(PLOTS_FOLDER, f"forecast_trading_{SYMBOL}_{timestamp}.png")
     DATASET_PATH = os.path.join(DATA_FOLDER, f"DATASET_{SYMBOL}.csv")
     DATA_MODEL_RATE = SYMBOL[:3]
     

@@ -5,19 +5,12 @@ import logging
 import time
 import argparse
 from datetime import datetime
+from folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
+from config import TIME_MINUTE_REPEAT, N_REPEAT
 
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+setup_folders()
 
-LOG_FOLDER = BASE_PATH + '/logs'
-LOG_FILE_PATH = 'training.log'
-TIME_MINUTE_REPEAT = 10
-N_REPEAT = 60
-
-if not os.path.exists(LOG_FOLDER):
-    os.makedirs(LOG_FOLDER)
-    print(f"\033[92mCartella '{LOG_FOLDER}' creata con successo.\033[0m")
-
-logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_TRAINING_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def run_scripts_for_symbol(symbol):
     print(f"\033[93m*** Avvio Creazione del DataSet per {symbol}\033[0m\n")

@@ -1,31 +1,17 @@
 import os
-import sys
 import logging
 import argparse
 import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
+from config import RETRY_LIMIT, INTERVAL
+from folder_config import setup_folders, DATA_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_DATASET_FILE_PATH
 
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-LOG_FOLDER = BASE_PATH + '/logs'
-LOG_FILE_PATH = 'create_dataSet.log'
-DATA_FOLDER = BASE_PATH + '/dataset'
-PLOT_FOLDER = BASE_PATH + '/plots'
 GENERATE_PLOT = False
 SHOW_PLOT = False
-INTERVAL = '2m'
-RETRY_LIMIT = 3
 
-if not os.path.exists(LOG_FOLDER):
-    os.makedirs(LOG_FOLDER)
-    print(f"\033[92mCartella '{LOG_FOLDER}' creata con successo.\033[0m")
-
-if not os.path.exists(DATA_FOLDER):
-    os.makedirs(DATA_FOLDER)
-    print(f"\033[92mCartella '{DATA_FOLDER}' creata con successo.\033[0m")  
-        
-logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+setup_folders()
+logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_DATASET_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def getForexData(interval,symbol):
     
@@ -83,7 +69,7 @@ def run_create_dataSet(interval,symbol):
         if GENERATE_PLOT:
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            plotName = os.path.join(PLOT_FOLDER, f"{symbol}_{timestamp}.png")
+            plotName = os.path.join(PLOTS_FOLDER, f"{symbol}_{timestamp}.png")
             
             if SHOW_PLOT:
                 mpf.plot(
@@ -132,9 +118,5 @@ if __name__ == "__main__":
     
     if args.plot is not None:
         GENERATE_PLOT = args.plot
-        
-    if not os.path.exists(PLOT_FOLDER) and GENERATE_PLOT:
-        os.makedirs(PLOT_FOLDER)
-        print(f"\033[92mCartella '{PLOT_FOLDER}' creata con successo.\033[0m")      
-    
+            
     run_create_dataSet(INTERVAL,SYMBOL)

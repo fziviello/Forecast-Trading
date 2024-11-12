@@ -1,19 +1,15 @@
 import os
-import sys
+
 import pandas as pd
 import argparse
 import logging
+from folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH
 
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-LOG_FOLDER = BASE_PATH + '/logs'
-LOG_FILE_PATH = 'get_statistics.log'
 PREFIX_VALIDATION = 'forecast_validation'
 
-if not os.path.exists(LOG_FOLDER):
-    os.makedirs(LOG_FOLDER)
+setup_folders()
 
-logging.basicConfig(filename=os.path.join(LOG_FOLDER, LOG_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_STATISTICS_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_validation_results(symbol):
     validation_file_path = os.path.join('RESULTS', f'{PREFIX_VALIDATION}_{symbol}.csv')

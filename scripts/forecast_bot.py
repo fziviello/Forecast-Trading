@@ -7,12 +7,12 @@ from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 import os
-import sys
 from datetime import datetime,timedelta
 import pytz
 import mplfinance as mpf
 import logging
 import argparse
+import itertools
 
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
 from config import MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
@@ -21,6 +21,16 @@ GENERATE_PLOT = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
+
+PARAM_GRID = {
+    'units': [50, 75, 100],
+    'dropout': [0.2, 0.3, 0.4],
+    'epochs': [50, 75, 100]
+}
+
+BEST_ACCURACY = 0
+BEST_PARAMS = None
+BEST_MODEL = None
 
 setup_folders()
     
@@ -47,6 +57,39 @@ def exchange_currency(base, target):
         print(f"\033[91m'Errore nel recuperare il tasso di cambio, verrà utilizzato il suo valore di default'\033[0m")
         logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
         return None
+
+def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
+    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL
+            
+    model = Sequential([
+        Input(shape=(X_train.shape[1], X_train.shape[2])),
+        LSTM(units=units, return_sequences=True),
+        Dropout(dropout),
+        LSTM(units=units, return_sequences=False),
+        Dropout(dropout),
+        Dense(units=1, activation='sigmoid')
+    ])
+        
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    model.fit(X_train, y_train, epochs=epochs, batch_size=32, validation_split=0.2, callbacks=[early_stopping], verbose=0)
+    loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
+    
+    print(f"Accuracy: {accuracy:.4f}%\n")
+    logging.info(f"Accuracy: {accuracy:.4f}%")
+
+    if accuracy > BEST_ACCURACY:
+        BEST_ACCURACY = accuracy
+        BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs}
+        BEST_MODEL = model
+        print(f"\033\n[92mConfigurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\033[0m")
+        logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
+    
+def grid_search_optimization(X_train, y_train, X_test, y_test):
+    for units, dropout, epochs in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs']):
+        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
+        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
+        create_model(X_train, y_train, X_test, y_test, units, dropout, epochs)
 
 def load_and_preprocess_data():
     global DATASET_PATH
@@ -193,11 +236,13 @@ def run_trading_model():
             Dropout(0.2),
             Dense(units=1, activation='sigmoid')
         ])
-        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-        model.fit(X_train, y_train, epochs=75, batch_size=32, validation_split=0.2, callbacks=[early_stopping])
+        
+        grid_search_optimization(X_train, y_train, X_test, y_test)  
+        model = BEST_MODEL
+        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\033[0m")
+        logging.info(f"Migliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
         model.save(MODEL_PATH)
-
+       
     predictions = (model.predict(X_test) > 0.5).astype(int)
 
     results = []

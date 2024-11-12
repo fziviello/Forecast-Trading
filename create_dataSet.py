@@ -6,10 +6,10 @@ import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
 
-LOG_FOLDER = 'LOGS'
+LOG_FOLDER = 'logs'
 LOG_FILE_PATH = 'create_dataSet.log'
-DATA_FOLDER = 'DATASET'
-PLOT_FOLDER = 'PLOT'
+DATA_FOLDER = 'dataset'
+PLOT_FOLDER = 'plots'
 GENERATE_PLOT = False
 SHOW_PLOT = False
 INTERVAL = '2m'

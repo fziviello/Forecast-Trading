@@ -4,7 +4,7 @@ import pandas as pd
 import argparse
 import logging
 
-LOG_FOLDER = 'LOGS'
+LOG_FOLDER = 'logs'
 LOG_FILE_PATH = 'get_statistics.log'
 PREFIX_VALIDATION = 'forecast_validation'
 

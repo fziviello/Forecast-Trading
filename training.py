@@ -6,7 +6,7 @@ import time
 import argparse
 from datetime import datetime
 
-LOG_FOLDER = 'LOGS'
+LOG_FOLDER = 'logs'
 LOG_FILE_PATH = 'training.log'
 TIME_MINUTE_REPEAT = 10
 N_REPEAT = 60

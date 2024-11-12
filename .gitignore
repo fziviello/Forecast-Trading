@@ -7,11 +7,11 @@ venv/
 __pycache__/
 
 # Ignora le cartelle
-DATASET
-LOGS
-MODELS
-PLOT
-RESULTS
+dataset
+logs
+models
+plots
+results
 
 # Ignora file
 *.log

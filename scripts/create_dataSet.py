@@ -6,10 +6,12 @@ import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
 
-LOG_FOLDER = 'logs'
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+LOG_FOLDER = BASE_PATH + '/logs'
 LOG_FILE_PATH = 'create_dataSet.log'
-DATA_FOLDER = 'dataset'
-PLOT_FOLDER = 'plots'
+DATA_FOLDER = BASE_PATH + '/dataset'
+PLOT_FOLDER = BASE_PATH + '/plots'
 GENERATE_PLOT = False
 SHOW_PLOT = False
 INTERVAL = '2m'

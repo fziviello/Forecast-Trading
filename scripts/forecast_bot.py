@@ -23,11 +23,13 @@ N_PREDICTIONS = 10
 VALIDATION_THRESHOLD = 0.1
 INTERVAL_MINUTES = 2
 
-MODELS_FOLDER = 'models'
-DATA_FOLDER = 'dataset'
-RESULTS_FOLDER = 'results'
-PLOT_FOLDER = 'plots'
-LOG_FOLDER = 'logs'
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+MODELS_FOLDER = BASE_PATH + '/models'
+DATA_FOLDER = BASE_PATH + '/dataset'
+RESULTS_FOLDER = BASE_PATH + '/results'
+PLOT_FOLDER = BASE_PATH + '/plots'
+LOG_FOLDER = BASE_PATH + '/logs'
 LOG_FILE_PATH = 'forecast_bot.log'
 GENERATE_PLOT = False
 SHOW_PLOT = False

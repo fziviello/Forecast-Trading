@@ -19,7 +19,7 @@ The script contains several parameters that you can modify to suit your needs:
 
 ## Run
 
-- Start Training : `python3 training.py --symbol AUDJPY,AUDCHF`
+- Start Training : `python3 scripts/training.py --symbol AUDJPY,AUDCHF`
 
 # DataSet Generator
 
@@ -51,7 +51,7 @@ The script contains several parameters that you can modify to suit your needs:
 
 ## Run
 
-- Create DataSet: `python3 create_dataSet.py --symbol AUDJPY`
+- Create DataSet: `python3 scripts/create_dataSet.py --symbol AUDJPY`
 
 # Forecast BOT
 
@@ -111,7 +111,7 @@ Use the dataset created with the script `create_dataSet`
 
 ## Run
 
-- Start Forecast: `python3 forecast_bot.py --symbol AUDJPY`
+- Start Forecast: `python3 scripts/forecast_bot.py --symbol AUDJPY`
 
 # Calculate Statistics
 
@@ -129,7 +129,7 @@ This script calculates the statistics obtained by the model during its training.
 
 ## Run
 
-- Start Get Statistics: `python3 get_statistics.py --symbol AUDJPY`
+- Start Get Statistics: `python3 scripts/get_statistics.py --symbol AUDJPY`
 
 ## Requirements
 

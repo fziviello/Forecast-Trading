@@ -4,7 +4,9 @@ import pandas as pd
 import argparse
 import logging
 
-LOG_FOLDER = 'logs'
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+LOG_FOLDER = BASE_PATH + '/logs'
 LOG_FILE_PATH = 'get_statistics.log'
 PREFIX_VALIDATION = 'forecast_validation'
 

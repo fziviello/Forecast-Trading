@@ -6,7 +6,9 @@ import time
 import argparse
 from datetime import datetime
 
-LOG_FOLDER = 'logs'
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+LOG_FOLDER = BASE_PATH + '/logs'
 LOG_FILE_PATH = 'training.log'
 TIME_MINUTE_REPEAT = 10
 N_REPEAT = 60

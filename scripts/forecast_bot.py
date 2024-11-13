@@ -5,6 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adam, RMSprop
 import talib
 import joblib
 import os
@@ -15,6 +16,7 @@ import logging
 import argparse
 import itertools
 import time
+import matplotlib.pyplot as plt
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
 from config import MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
 
@@ -26,12 +28,15 @@ REPEAT_TRAINING = False
 BEST_ACCURACY = None
 BEST_PARAMS = None
 BEST_MODEL = None
+ACCURACY_LIST = []
 
 PARAM_GRID = {
-    'units': [50, 75, 100, 150],
-    'dropout': [0.2, 0.3, 0.4, 0.5],
-    'epochs': [50, 75, 100, 125],
-    'batch_size': [16, 32, 64]
+    'units': [50, 75, 100],
+    'dropout': [0.2, 0.3],
+    'epochs': [50, 75, 100],
+    'batch_size': [16, 32, 64],
+    'learning_rate': [0.001, 0.005, 0.01],
+    'optimizer': ['adam', 'rmsprop']
 }
 
 setup_folders()
@@ -58,9 +63,42 @@ def exchange_currency(base, target):
         logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
         return None
 
-def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size):
-    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL
-            
+def plot_model_performance(accuracy_list, plotFile):    
+    units = [config['units'] for config in accuracy_list]
+    dropout = [config['dropout'] for config in accuracy_list]
+    epochs = [config['epochs'] for config in accuracy_list]
+    batch_size = [config['batch_size'] for config in accuracy_list]
+    learning_rate = [config['learning_rate'] for config in accuracy_list]
+    optimizer = [config['optimizer'] for config in accuracy_list]
+    accuracies = [config['accuracy'] for config in accuracy_list]
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+    scatter = ax.scatter(range(len(accuracies)), accuracies, c=accuracies, cmap='viridis', edgecolors='k', s=100)
+
+    ax.set_title("Performance dei Modelli durante la Ricerca a Griglia", fontsize=14)
+    ax.set_xlabel("Configurazione dei Parametri", fontsize=12)
+    ax.set_ylabel("Accuratezza", fontsize=12)
+    ax.set_xticks(range(len(accuracies)))
+    ax.set_xticklabels([
+        f"Units={u}\nDropout={d}\nEpochs={e}\nBatch={b}\nLR={lr}\nOpt={opt}"
+        for u, d, e, b, lr, opt in zip(units, dropout, epochs, batch_size, learning_rate, optimizer)
+    ], rotation=90, fontsize=8)
+
+    plt.colorbar(scatter, ax=ax, label="Accuratezza")
+    plt.tight_layout()
+    plt.savefig(plotFile)
+    
+    if SHOW_PLOT:
+        plt.show()
+
+def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer_name):
+    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST    
+    
+    if optimizer_name == 'adam':
+        optimizer = Adam(learning_rate=learning_rate)
+    elif optimizer_name == 'rmsprop':
+        optimizer = RMSprop(learning_rate=learning_rate)
+        
     model = Sequential([
         Input(shape=(X_train.shape[1], X_train.shape[2])),
         LSTM(units=units, return_sequences=True),
@@ -70,34 +108,41 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch
         Dense(units=1, activation='sigmoid')
     ])
         
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
     model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2, callbacks=[early_stopping], verbose=0)
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     
-    print(f"Accuracy: {accuracy:.4f}%\n")
-    logging.info(f"Accuracy: {accuracy:.4f}%")
+    print(f"Accuracy: {accuracy:.3f}%\n")
+    logging.info(f"Accuracy: {accuracy:.3f}%")
+    
+    ACCURACY_LIST.append({'units': units, 'dropout': dropout, 'epochs': epochs, 'batch_size': batch_size, 'learning_rate': learning_rate, 'optimizer': optimizer_name, 'accuracy': accuracy})
 
     if accuracy > BEST_ACCURACY:
         BEST_ACCURACY = accuracy
-        BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs, 'batch_size': batch_size}
+        BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs, 'batch_size': batch_size, 'learning_rate': learning_rate, 'optimizer': optimizer_name}
         BEST_MODEL = model
-        print(f"\033\n[92mConfigurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\033[0m")
-        logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
+        print(f"\033\n[92mConfigurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\033[0m")
+        logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
     
 def grid_search_optimization(X_train, y_train, X_test, y_test):
-    
-    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL
+    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST, PLOT_MODEL_FILE_PATH
+
     BEST_ACCURACY = 0.0
     BEST_PARAMS = {}
+    ACCURACY_LIST = []
     BEST_MODEL = None
-    
-    start_time = time.time()
-    for units, dropout, epochs, batch_size in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs'], PARAM_GRID['batch_size']):
-        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}")
-        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}")
-        create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size)
 
+    start_time = time.time()
+    for units, dropout, epochs, batch_size, learning_rate, optimizer in itertools.product(
+        PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs'], PARAM_GRID['batch_size'],
+        PARAM_GRID['learning_rate'], PARAM_GRID['optimizer']
+    ):
+        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
+        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
+        create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer)
+
+    plot_model_performance(ACCURACY_LIST, PLOT_MODEL_FILE_PATH)
     end_time = time.time()
     elapsed_time = end_time - start_time
 
@@ -263,8 +308,8 @@ def run_trading_model():
     else:
         grid_search_optimization(X_train, y_train, X_test, y_test)  
         model = BEST_MODEL
-        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\n\033[0m")
-        logging.info(f"Migliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
+        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\n\033[0m")
+        logging.info(f"Migliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
         model.save(MODEL_PATH)
        
     predictions = (model.predict(X_test) > 0.5).astype(int)
@@ -358,6 +403,7 @@ if __name__ == "__main__":
     FORECAST_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_trading_{SYMBOL}.csv")
     VALIDATION_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_validation_{SYMBOL}.csv")
     PLOT_FILE_PATH = os.path.join(PLOTS_FOLDER, f"forecast_trading_{SYMBOL}_{timestamp}.png")
+    PLOT_MODEL_FILE_PATH = os.path.join(PLOTS_FOLDER, f"forecast_trading_model_{SYMBOL}_{timestamp}.png")
     DATASET_PATH = os.path.join(DATA_FOLDER, f"DATASET_{SYMBOL}.csv")
     DATA_MODEL_RATE = SYMBOL[:3]
     

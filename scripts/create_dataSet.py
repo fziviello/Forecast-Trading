@@ -50,7 +50,7 @@ def getForexData(interval,symbol):
                 raise ValueError(f"\033[93mNessun dato recuperato per {symbol}\033[0m")
             
             data.reset_index(inplace=True)
-            return data[['Datetime', 'Open', 'High', 'Low', 'Close']]
+            return data[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume', 'Dividends', 'Stock Splits']]
         
         except Exception as e:
             attempt += 1

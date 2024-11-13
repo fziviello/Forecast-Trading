@@ -24,9 +24,10 @@ OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
 
 PARAM_GRID = {
-    'units': [50, 75, 100],
-    'dropout': [0.2, 0.3, 0.4],
-    'epochs': [50, 75, 100]
+    'units': [50, 75, 100, 150],
+    'dropout': [0.2, 0.3, 0.4, 0.5],
+    'epochs': [50, 75, 100, 125],
+    'batch_size': [16, 32, 64]
 }
 
 BEST_ACCURACY = None
@@ -57,7 +58,7 @@ def exchange_currency(base, target):
         logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
         return None
 
-def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
+def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size):
     global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL
             
     model = Sequential([
@@ -71,7 +72,7 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
         
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    model.fit(X_train, y_train, epochs=epochs, batch_size=32, validation_split=0.2, callbacks=[early_stopping], verbose=0)
+    model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.2, callbacks=[early_stopping], verbose=0)
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     
     print(f"Accuracy: {accuracy:.4f}%\n")
@@ -79,7 +80,7 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
 
     if accuracy > BEST_ACCURACY:
         BEST_ACCURACY = accuracy
-        BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs}
+        BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs, 'batch_size': batch_size}
         BEST_MODEL = model
         print(f"\033\n[92mConfigurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%\033[0m")
         logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
@@ -92,10 +93,10 @@ def grid_search_optimization(X_train, y_train, X_test, y_test):
     BEST_MODEL = None
     
     start_time = time.time()
-    for units, dropout, epochs in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs']):
-        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
-        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}")
-        create_model(X_train, y_train, X_test, y_test, units, dropout, epochs)
+    for units, dropout, epochs, batch_size in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs'], PARAM_GRID['batch_size']):
+        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}")
+        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}")
+        create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size)
 
     end_time = time.time()
     elapsed_time = end_time - start_time

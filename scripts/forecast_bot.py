@@ -23,16 +23,16 @@ SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
 
+BEST_ACCURACY = None
+BEST_PARAMS = None
+BEST_MODEL = None
+
 PARAM_GRID = {
     'units': [50, 75, 100, 150],
     'dropout': [0.2, 0.3, 0.4, 0.5],
     'epochs': [50, 75, 100, 125],
     'batch_size': [16, 32, 64]
 }
-
-BEST_ACCURACY = None
-BEST_PARAMS = None
-BEST_MODEL = None
 
 setup_folders()
     

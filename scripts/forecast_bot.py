@@ -29,7 +29,7 @@ PARAM_GRID = {
     'epochs': [50, 75, 100]
 }
 
-BEST_ACCURACY = 0
+BEST_ACCURACY = None
 BEST_PARAMS = None
 BEST_MODEL = None
 
@@ -87,6 +87,12 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs):
         logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.4f}%")
     
 def grid_search_optimization(X_train, y_train, X_test, y_test):
+    
+    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL
+    BEST_ACCURACY = 0.0
+    BEST_PARAMS = {}
+    BEST_MODEL = None
+    
     start_time = time.time()
     for units, dropout, epochs in itertools.product(PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs']):
         print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}")

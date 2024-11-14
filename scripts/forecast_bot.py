@@ -18,26 +18,18 @@ import itertools
 import time
 import matplotlib.pyplot as plt
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
+from config import PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
 
 GENERATE_PLOT = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
 
+SYMBOL = None
 BEST_ACCURACY = None
 BEST_PARAMS = None
 BEST_MODEL = None
 ACCURACY_LIST = []
-
-PARAM_GRID = {
-    'units': [50, 75, 100],
-    'dropout': [0.2, 0.3],
-    'epochs': [50, 75, 100],
-    'batch_size': [16, 32, 64],
-    'learning_rate': [0.001, 0.005, 0.01],
-    'optimizer': ['adam', 'rmsprop']
-}
 
 setup_folders()
     
@@ -92,7 +84,7 @@ def plot_model_performance(accuracy_list, plotFile):
         plt.show()
 
 def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer_name):
-    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST    
+    global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST    
     
     if optimizer_name == 'adam':
         optimizer = Adam(learning_rate=learning_rate)
@@ -122,11 +114,11 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch
         BEST_ACCURACY = accuracy
         BEST_PARAMS = {'units': units, 'dropout': dropout, 'epochs': epochs, 'batch_size': batch_size, 'learning_rate': learning_rate, 'optimizer': optimizer_name}
         BEST_MODEL = model
-        print(f"\033\n[92mConfigurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\033[0m")
-        logging.info(f"Configurazione migliore trovata: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
+        print(f"\033\n[92mConfigurazione migliore trovata per {SYMBOL}: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\033[0m")
+        logging.info(f"Configurazione migliore trovata per {SYMBOL}: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
     
 def grid_search_optimization(X_train, y_train, X_test, y_test):
-    global BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST, PLOT_MODEL_FILE_PATH
+    global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST, PLOT_MODEL_FILE_PATH
 
     BEST_ACCURACY = 0.0
     BEST_PARAMS = {}
@@ -149,8 +141,8 @@ def grid_search_optimization(X_train, y_train, X_test, y_test):
     hours, remainder = divmod(elapsed_time, 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    print(f"\033[93m\nTempo di elaborazione migliore configurazione: {int(hours):02}:{int(minutes):02}:{int(seconds):02}\n\033[0m")
-    logging.info(f"Tempo di elaborazione migliore configurazione: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
+    print(f"\033[93m\nTempo di elaborazione migliore configurazione {SYMBOL}: {int(hours):02}:{int(minutes):02}:{int(seconds):02}\n\033[0m")
+    logging.info(f"Tempo di elaborazione migliore configurazione {SYMBOL}: {int(hours):02}:{int(minutes):02}:{int(seconds):02}")
 
 def load_and_preprocess_data():
     global DATASET_PATH
@@ -282,7 +274,7 @@ def plot_forex_candlestick(df, predictions):
         mpf.show()
 
 def run_trading_model():
-    global MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
+    global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 
@@ -308,8 +300,8 @@ def run_trading_model():
     else:
         grid_search_optimization(X_train, y_train, X_test, y_test)  
         model = BEST_MODEL
-        print(f"\033\n[92mMigliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\n\033[0m")
-        logging.info(f"Migliori parametri trovati: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
+        print(f"\033\n[92mMigliori parametri trovati per {SYMBOL}: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%\n\033[0m")
+        logging.info(f"Migliori parametri trovati per {SYMBOL}: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
         model.save(MODEL_PATH)
        
     predictions = (model.predict(X_test) > 0.5).astype(int)

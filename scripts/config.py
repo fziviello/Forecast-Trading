@@ -10,3 +10,12 @@ RETRY_LIMIT = 3
 INTERVAL = '2m'
 TIME_MINUTE_REPEAT = 5
 N_REPEAT = 60
+
+PARAM_GRID = {
+    'units': [50, 75, 100],
+    'dropout': [0.2, 0.3],
+    'epochs': [50, 75, 100],
+    'batch_size': [16, 32, 64],
+    'learning_rate': [0.001, 0.005, 0.01],
+    'optimizer': ['adam', 'rmsprop']
+}

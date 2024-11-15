@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import argparse
 import logging
-from folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH
+from folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER
 
 PREFIX_VALIDATION = 'forecast_validation'
 
@@ -11,7 +11,7 @@ setup_folders()
 logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_STATISTICS_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_validation_results(symbol):
-    validation_file_path = os.path.join('RESULTS', f'{PREFIX_VALIDATION}_{symbol}.csv')
+    validation_file_path = os.path.join(RESULTS_FOLDER, f'{PREFIX_VALIDATION}_{symbol}.csv')
     if os.path.exists(validation_file_path):
         validation_df = pd.read_csv(validation_file_path)
         logging.info(f"Risultati di validazione per {symbol} caricati")

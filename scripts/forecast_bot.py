@@ -130,8 +130,8 @@ def grid_search_optimization(X_train, y_train, X_test, y_test):
         PARAM_GRID['units'], PARAM_GRID['dropout'], PARAM_GRID['epochs'], PARAM_GRID['batch_size'],
         PARAM_GRID['learning_rate'], PARAM_GRID['optimizer']
     ):
-        print(f"\nTest Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
-        logging.info(f"Test Configurazione: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
+        print(f"\nTest Configurazione per {SYMBOL}: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
+        logging.info(f"Test Configurazione per {SYMBOL}: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
         create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer)
 
     plot_model_performance(ACCURACY_LIST, PLOT_MODEL_FILE_PATH)

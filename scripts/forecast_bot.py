@@ -17,10 +17,12 @@ import argparse
 import itertools
 import time
 import matplotlib.pyplot as plt
+from telegram_sender import TelegramSender
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
+from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
 
 GENERATE_PLOT = False
+SEND_TELEGRAM = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
@@ -32,8 +34,13 @@ BEST_MODEL = None
 ACCURACY_LIST = []
 
 setup_folders()
-    
+
 logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_FORECAST_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def sendNotify(msg):
+    if SEND_TELEGRAM is True:
+        telegramSender = TelegramSender(BOT_TOKEN)
+        telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
 
 def calculator_profit(predicted_take_profit, predicted_entry_price):
     return round(abs((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE), 2)
@@ -339,7 +346,9 @@ def run_trading_model():
     row_index = 1
     for result in results:
         logging.info(f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
-
+        
+        sendNotify(f"Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
+        
         type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] == "Buy" or result['Tipo'] == "Buy Limit" or result['Tipo'] == "Buy Stop" else f"\033[91m{result['Tipo']}\033[0m"
         entry_price_colored = f"\033[96m{result['Prezzo']}\033[0m"
         stop_loss_colored = f"\033[93m{result['Stop Loss']}\033[0m"
@@ -372,13 +381,17 @@ def run_trading_model():
 if __name__ == "__main__":
         
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
-    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
+    parser.add_argument("--notify", type=bool, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--plot", type=bool, required=False, help="Generare il grafico")
     parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
     parser.add_argument("--favoriteRate", type=str, required=False, help="Inserire il rate di conversione")
     parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
     args = parser.parse_args()
     SYMBOL = (args.symbol).upper()
     
+    if args.notify is not None :
+        SEND_TELEGRAM = args.notify
+        
     if args.interval is not None :
         FAVORITE_RATE = args.favoriteRate
     

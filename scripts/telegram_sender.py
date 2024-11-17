@@ -13,6 +13,6 @@ class TelegramSender:
         try:
             response = requests.post(url, json=payload)
             response.raise_for_status()
-            print(f"Messaggio inviato al canale {channel} con successo.")
+            print(f"\033[92mMessaggio inviato al canale {channel} con successo.\033[0m")
         except requests.exceptions.RequestException as e:
-            print(f"Errore nell'invio del messaggio: {e}")
+            print(f"\033[91mErrore nell'invio del messaggio: {e}\033[0m")

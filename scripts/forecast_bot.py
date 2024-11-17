@@ -354,7 +354,7 @@ def run_trading_model():
         circle_emoji = "🔵" if result['Tipo'] in ["Buy", "Buy Limit", "Buy Stop"] else "🔴"
         max_width = max(len(result['Prezzo'].split('.')[0]), 3) + 9
         details_notify = (
-            f"{circle_emoji} {result['Tipo']}\n"
+            f"{circle_emoji} {result['Tipo']} {SYMBOL}\n"
             f"{'Prezzo:':<12}{result['Prezzo'].rjust(max_width)}\n"
             f"{'Stop Limit:':<12}{result['Stop Loss'].rjust(max_width)}\n"
             f"{'Take Profit:':<12}{result['Take Profit'].rjust(max_width)}\n"
@@ -376,7 +376,7 @@ def run_trading_model():
         row_index += 1
 
     print("\n")
-    sendNotify("\n".join(details_notify_list))
+    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
 

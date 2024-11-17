@@ -344,18 +344,30 @@ def run_trading_model():
 
     print("\nPrevisioni Generate:\n")
     row_index = 1
-    for result in results:
-        logging.info(f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
-        
-        sendNotify(f"Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}")
-        
-        type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] == "Buy" or result['Tipo'] == "Buy Limit" or result['Tipo'] == "Buy Stop" else f"\033[91m{result['Tipo']}\033[0m"
+    details_notify_list = []
+    for row_index, result in enumerate(results, start=1):
+        details = (
+            f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, "
+            f"Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, "
+            f"Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}"
+        )
+        circle_emoji = "🔵" if result['Tipo'] in ["Buy", "Buy Limit", "Buy Stop"] else "🔴"
+        max_width = max(len(result['Prezzo'].split('.')[0]), 3) + 9
+        details_notify = (
+            f"{circle_emoji} {result['Tipo']}\n"
+            f"{'Prezzo:':<12}{result['Prezzo'].rjust(max_width)}\n"
+            f"{'Stop Limit:':<12}{result['Stop Loss'].rjust(max_width)}\n"
+            f"{'Take Profit:':<12}{result['Take Profit'].rjust(max_width)}\n"
+        )
+        details_notify_list.append(details_notify)
+        logging.info(details)
+        type_colored = f"\033[94m{result['Tipo']}\033[0m" if result['Tipo'] in ["Buy", "Buy Limit", "Buy Stop"] else f"\033[91m{result['Tipo']}\033[0m"
         entry_price_colored = f"\033[96m{result['Prezzo']}\033[0m"
         stop_loss_colored = f"\033[93m{result['Stop Loss']}\033[0m"
         take_profit_colored = f"\033[95m{result['Take Profit']}\033[0m"
         guadagno_colored = f"\033[92m{result['Guadagno']}\033[0m" if float(result['Guadagno'][:-1]) > 0 else f"\033[91m{result['Guadagno']}\033[0m"
         perdita_colored = f"\033[91m{result['Perdita']}\033[0m"
-
+        
         print(
             f"{row_index:>2})  {type_colored:<8} Prezzo: {entry_price_colored:<8} Stop Loss: {stop_loss_colored:<8} "
             f"Take Profit: {take_profit_colored:<8} Guadagno: {guadagno_colored:<10} Perdita: {perdita_colored:<10}"
@@ -364,6 +376,7 @@ def run_trading_model():
         row_index += 1
 
     print("\n")
+    sendNotify("\n".join(details_notify_list))
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
 

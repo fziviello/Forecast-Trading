@@ -9,7 +9,7 @@ from tensorflow.keras.optimizers import Adam, RMSprop
 import talib
 import joblib
 import os
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,timezone
 import pytz
 import mplfinance as mpf
 import logging
@@ -215,9 +215,9 @@ def validate_predictions():
 
         if not actual_data.empty:
             actual_close = actual_data.iloc[0]['Close']
-            predicted_entry_price = float(row['Prezzo'])
-            predicted_take_profit = float(row['Take Profit'])
-            predicted_stop_loss = float(row['Stop Loss'])
+            predicted_entry_price = f"{float(row['Prezzo']):.5f}"
+            predicted_take_profit = f"{float(row['Take Profit']):.5f}"
+            predicted_stop_loss = f"{float(row['Stop Loss']):.5f}"
 
             if actual_close >= predicted_take_profit:
                 result = "Successo - Take Profit raggiunto"
@@ -376,10 +376,12 @@ def run_trading_model():
         row_index += 1
 
     print("\n")
-    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+        
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
-
+    
+    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+        
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     else:
@@ -387,7 +389,7 @@ def run_trading_model():
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='a', index=False, header=False)
         else:
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
-
+    
     if GENERATE_PLOT:
         plot_forex_candlestick(df, predictions)
 

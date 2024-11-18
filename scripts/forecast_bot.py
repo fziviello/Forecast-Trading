@@ -19,7 +19,7 @@ import time
 import matplotlib.pyplot as plt
 from telegram_sender import TelegramSender
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES
+from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
@@ -37,6 +37,34 @@ setup_folders()
 
 logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_FORECAST_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
+    global FORECAST_RESULTS_PATH
+    try:
+        df = pd.read_csv(FORECAST_RESULTS_PATH)
+        unique_details = list(dict.fromkeys(details_notify_list))
+        now = datetime.now(pytz.utc)
+        for notify in unique_details:
+            if notify in df.to_string(index=False):
+                if 'Data Previsione' in df.columns:
+                    data_previsione = pd.to_datetime(
+                        df.loc[df.apply(lambda row: notify in row.to_string(), axis=1), 'Data Previsione']
+                    )
+                    if not data_previsione.empty:
+                        data_previsione = data_previsione.iloc[0].tz_localize(None)
+                        now_naive = now.replace(tzinfo=None)
+                        if now_naive - data_previsione > timedelta(minutes=time_life_minutes):
+                            continue
+                return False
+        return True
+    except FileNotFoundError:
+        logging.warning(f"Il File {FORECAST_RESULTS_PATH} non esiste o potrebbe non essere ancora stato generato")
+        print(f"\033[93mIl File {FORECAST_RESULTS_PATH} non esiste o potrebbe non essere ancora stato generato\n\033[0m")
+        return True
+    except Exception as e:
+        logging.error(f"Errore durante la verifica della notifica: {e}")
+        print(f"\033[91m'Errore durante la verifica della notifica: {e}'\033[0m")
+        return False
+    
 def sendNotify(msg):
     if SEND_TELEGRAM is True:
         telegramSender = TelegramSender(BOT_TOKEN)
@@ -385,8 +413,12 @@ def run_trading_model():
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
-    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
-   
+    if is_forecast_still_valid(results_df, FORECAST_VALIDITY_MINUTES):
+        sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+    else:
+        logging.info(f"La previsione è ancora valida")
+        print(f"\033[93mLa previsione è ancora valida\n\033[0m")
+        
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     else:

@@ -19,10 +19,10 @@ class TelegramSender:
             message_id = message_data['result']['message_id']
             logging.debug(response.json())
             logging.info(f"Messaggio inviato al canale {channel} con successo con ID {message_id}")
-            print(f"\033[92mMessaggio inviato al canale {channel} con successo con ID {message_id}\033[0m")
+            print(f"\033[92mMessaggio inviato al canale {channel} con successo con ID {message_id}\n\033[0m")
         except requests.exceptions.RequestException as e:
             logging.error(f"Errore nell'invio del messaggio: {e}")
-            print(f"\033[91mErrore nell'invio del messaggio: {e}\033[0m")
+            print(f"\033[91mErrore nell'invio del messaggio: {e}\n\033[0m")
 
     def getBotMsg(self, offset=None):
         url = f"https://api.telegram.org/bot{self.bot_token}/getUpdates"

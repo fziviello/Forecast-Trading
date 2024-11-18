@@ -385,11 +385,8 @@ def run_trading_model():
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
-    if check_if_prediction_exists(results_df, 1) is False:
-        sendNotify("\n".join(dict.fromkeys(details_notify_list)))
-    else:
-        print(f"\033[93mPrevisione già inviata\n\033[0m")
-        
+    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+   
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     else:

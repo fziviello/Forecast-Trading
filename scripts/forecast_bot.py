@@ -215,9 +215,9 @@ def validate_predictions():
 
         if not actual_data.empty:
             actual_close = actual_data.iloc[0]['Close']
-            predicted_entry_price = f"{float(row['Prezzo']):.5f}"
-            predicted_take_profit = f"{float(row['Take Profit']):.5f}"
-            predicted_stop_loss = f"{float(row['Stop Loss']):.5f}"
+            predicted_entry_price = float(row['Prezzo'])
+            predicted_take_profit = float(row['Take Profit'])
+            predicted_stop_loss = float(row['Stop Loss'])
 
             if actual_close >= predicted_take_profit:
                 result = "Successo - Take Profit raggiunto"
@@ -325,8 +325,13 @@ def run_trading_model():
         hypothetical_profit = calculator_profit(take_profit, entry_price)
         hypothetical_loss = calculator_loss(stop_loss, entry_price)
 
+        # Allineo tutte le date a UTC come il dataset
         data_obj = datetime.now()
+        italy_tz = pytz.timezone('Europe/Rome')
+        utc_tz = pytz.UTC
         data_utc = data_obj.replace(tzinfo=pytz.UTC)
+        data_italy = italy_tz.localize(data_obj)
+        data_utc = data_italy.astimezone(utc_tz)
         data_utc = data_utc - timedelta(minutes=INTERVAL_MINUTES)  # Sottraggo i minuti definiti nel dataset per essere allineato
         data_formatted = data_utc.strftime("%Y-%m-%d %H:%M:%S%z")
 
@@ -380,7 +385,10 @@ def run_trading_model():
     results_df = pd.DataFrame(results)
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
-    sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+    if check_if_prediction_exists(results_df, 1) is False:
+        sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+    else:
+        print(f"\033[93mPrevisione già inviata\n\033[0m")
         
     if OVERWRITE_FORECAST_CSV:
         results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)

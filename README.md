@@ -76,8 +76,9 @@ Use the dataset created with the script `create_dataSet`
 
 You can change them in the config.py file
 
-- `MARGIN_PROFIT`: The profit margin to calculate take profit levels
-- `LOT_SIZE`: The number of lots.
+- `MAX_MARGIN`: Maximum margin on price
+- `MIN_MARGIN`: Minimum margin on the price
+- `LOT_SIZE`: The number of lots
 - `CONTRACT_SIZE`: Standard volume for one Forex lot
 - `EXCHANGE_RATE`: The exchange rate for profit calculations
 - `FAVORITE_RATE`: Preferred conversion currency (EUR)

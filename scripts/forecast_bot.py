@@ -19,7 +19,7 @@ import time
 import matplotlib.pyplot as plt
 from telegram_sender import TelegramSender
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LOT_SIZE, CONTRACT_SIZE, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MAX_MARGIN, MIN_MARGIN, LOT_SIZE, CONTRACT_SIZE, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
@@ -79,6 +79,15 @@ def calculator_loss(predicted_stop_loss, predicted_entry_price):
     price_difference = predicted_entry_price - predicted_stop_loss
     loss = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
     return round(abs(loss), 2)
+
+def calculate_dynamic_margin(entry_price, volatility, reward_ratio=1, recovery_ratio=2):
+    tp_margin = volatility * reward_ratio
+    sl_margin = tp_margin * recovery_ratio
+    max_margin = entry_price * MAX_MARGIN
+    min_margin = entry_price * MIN_MARGIN
+    tp_margin = min(max(tp_margin, min_margin), max_margin)
+    sl_margin = min(max(sl_margin, min_margin * recovery_ratio), max_margin * recovery_ratio)
+    return tp_margin, sl_margin
         
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
@@ -350,10 +359,27 @@ def run_trading_model():
         entry_price = round(df['Close'].iloc[-N_PREDICTIONS + i], 3)
         order_type = "Buy" if pred == 1 else "Sell"
         order_class = "Limit" if pred == 1 else "Stop"
+  
+        volatility = df['Volatility'].iloc[-1]
 
-        stop_loss = round(entry_price * (0.98 if order_type == "Buy" else 1.02), 3)
-        take_profit = round(entry_price * (1 + MARGIN_PROFIT if order_type == "Buy" else 1 - MARGIN_PROFIT), 3)
-        
+        dynamic_tp_margin, dynamic_sl_margin = calculate_dynamic_margin(
+            entry_price=entry_price,
+            volatility=volatility,
+            reward_ratio=1,
+            recovery_ratio=2
+        )
+
+        if order_type == "Sell":
+            take_profit = round(entry_price - dynamic_tp_margin, 5)
+            stop_loss = round(entry_price + dynamic_sl_margin, 5)
+        else:
+            take_profit = round(entry_price + dynamic_tp_margin, 5)
+            stop_loss = round(entry_price - dynamic_sl_margin, 5)
+
+        logging.debug(f"Entry Price: {entry_price}")
+        logging.debug(f"Volatility: {volatility}, Dynamic TP Margin: {dynamic_tp_margin}, Dynamic SL Margin: {dynamic_sl_margin}")
+        logging.debug(f"Final Take Profit: {take_profit}, Final Stop Loss: {stop_loss}")
+
         hypothetical_profit = calculator_profit(take_profit, entry_price)
         hypothetical_loss = calculator_loss(stop_loss, entry_price)
 

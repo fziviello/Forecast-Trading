@@ -80,15 +80,16 @@ def calculator_loss(predicted_stop_loss, predicted_entry_price):
     loss = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
     return round(abs(loss), 2)
 
-def calculate_dynamic_margin(entry_price, volatility, reward_ratio=1, recovery_ratio=2):
-    tp_margin = volatility * reward_ratio
+def calculate_dynamic_margin(entry_price, volatility, atr, reward_ratio=1, recovery_ratio=2, atr_weight=0.5):
+    weighted_volatility = (volatility * (1 - atr_weight)) + (atr * atr_weight)
+    tp_margin = weighted_volatility * reward_ratio
     sl_margin = tp_margin * recovery_ratio
     max_margin = entry_price * MAX_MARGIN
     min_margin = entry_price * MIN_MARGIN
     tp_margin = min(max(tp_margin, min_margin), max_margin)
     sl_margin = min(max(sl_margin, min_margin * recovery_ratio), max_margin * recovery_ratio)
     return tp_margin, sl_margin
-        
+
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
     try:
@@ -361,12 +362,15 @@ def run_trading_model():
         order_class = "Limit" if pred == 1 else "Stop"
   
         volatility = df['Volatility'].iloc[-1]
-
+        atr = df['ATR'].iloc[-1]
+        
         dynamic_tp_margin, dynamic_sl_margin = calculate_dynamic_margin(
             entry_price=entry_price,
             volatility=volatility,
+            atr=atr,
             reward_ratio=1,
-            recovery_ratio=2
+            recovery_ratio=2,
+            atr_weight=0.7
         )
 
         if order_type == "Sell":
@@ -376,9 +380,10 @@ def run_trading_model():
             take_profit = round(entry_price + dynamic_tp_margin, 5)
             stop_loss = round(entry_price - dynamic_sl_margin, 5)
 
-        logging.debug(f"Entry Price: {entry_price}")
-        logging.debug(f"Volatility: {volatility}, Dynamic TP Margin: {dynamic_tp_margin}, Dynamic SL Margin: {dynamic_sl_margin}")
-        logging.debug(f"Final Take Profit: {take_profit}, Final Stop Loss: {stop_loss}")
+        logging.debug(f"DEBUG: Entry Price: {entry_price}")
+        logging.debug(f"DEBUG: Volatility: {volatility}, ATR: {atr}")
+        logging.debug(f"DEBUG: TP Margin: {dynamic_tp_margin}, SL Margin: {dynamic_sl_margin}")
+        logging.debug(f"DEBUG: Take Profit: {take_profit}, Stop Loss: {stop_loss}")
 
         hypothetical_profit = calculator_profit(take_profit, entry_price)
         hypothetical_loss = calculator_loss(stop_loss, entry_price)

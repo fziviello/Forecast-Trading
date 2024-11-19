@@ -80,14 +80,6 @@ def calculator_loss(predicted_stop_loss, predicted_entry_price):
     loss = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
     return round(abs(loss), 2)
         
-'''
-def calculator_profit(predicted_take_profit, predicted_entry_price):
-    return round(abs((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE), 2)
-            
-def calculator_loss(predicted_stop_loss, predicted_entry_price):
-    return round((predicted_entry_price - predicted_stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
-    '''
-
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
     try:

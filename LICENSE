@@ -1,21 +1,25 @@
-MIT License
+Copyright (c) 2024 Fabio Ziviello. All rights reserved.
 
-Copyright (c) 2024 Fabio Ziviello
+This software and associated documentation files (the "Software") are owned by [YOUR NAME OR ORGANIZATION] (the "Owner").
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this Software, to use, copy, and distribute the Software for non-commercial purposes, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. **Non-Commercial Use Only**: 
+   - This Software is provided for personal, academic, or research use. Commercial use, including but not limited to resale, incorporation into a product or service for sale, or any other commercial exploitation, is strictly prohibited without prior written authorization from the Owner.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. **Attribution**:
+   - If you use this Software, you must give appropriate credit to the Owner and indicate if any changes were made.
+
+3. **Prohibited Actions**:
+   - You may not sublicense, modify, or distribute this Software in any way that permits third parties to use it for commercial purposes.
+
+4. **Commercial Use Authorization**:
+   - For commercial use, please contact [YOUR CONTACT INFORMATION] to request a license. Approval is at the sole discretion of the Owner, and fees may apply.
+
+5. **Warranty Disclaimer**:
+   - This Software is provided "as is", without any warranties, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the Owner be liable for any claim, damages, or other liability arising from the use or inability to use this Software.
+
+By using this Software, you agree to abide by these terms.
+
+Fabio Ziviello
+f.ziviello@gmail.com

@@ -19,7 +19,7 @@ import time
 import matplotlib.pyplot as plt
 from telegram_sender import TelegramSender
 from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LEVERAGE, UNIT, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MARGIN_PROFIT, LOT_SIZE, CONTRACT_SIZE, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
@@ -69,12 +69,24 @@ def sendNotify(msg):
     if SEND_TELEGRAM is True:
         telegramSender = TelegramSender(BOT_TOKEN)
         telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
+        
+def calculator_profit(predicted_take_profit, predicted_entry_price):
+    price_difference = predicted_take_profit - predicted_entry_price
+    profit = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
+    return round(abs(profit), 2)
 
+def calculator_loss(predicted_stop_loss, predicted_entry_price):
+    price_difference = predicted_entry_price - predicted_stop_loss
+    loss = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
+    return round(abs(loss), 2)
+        
+'''
 def calculator_profit(predicted_take_profit, predicted_entry_price):
     return round(abs((predicted_take_profit - predicted_entry_price) * UNIT * LEVERAGE * EXCHANGE_RATE), 2)
             
 def calculator_loss(predicted_stop_loss, predicted_entry_price):
     return round((predicted_entry_price - predicted_stop_loss) * UNIT * LEVERAGE * EXCHANGE_RATE, 2)
+    '''
 
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
@@ -462,9 +474,10 @@ if __name__ == "__main__":
     PLOT_FILE_PATH = os.path.join(PLOTS_FOLDER, f"forecast_trading_{SYMBOL}_{timestamp}.png")
     PLOT_MODEL_FILE_PATH = os.path.join(PLOTS_FOLDER, f"forecast_trading_model_{SYMBOL}_{timestamp}.png")
     DATASET_PATH = os.path.join(DATA_FOLDER, f"DATASET_{SYMBOL}.csv")
-    DATA_MODEL_RATE = SYMBOL[:3]
+    BASE_CURRENCY = SYMBOL[:3]
+    QUOTE_CURRENCY = SYMBOL[3:]
     
-    rate_exchange = exchange_currency(DATA_MODEL_RATE, FAVORITE_RATE)
+    rate_exchange = exchange_currency(QUOTE_CURRENCY, FAVORITE_RATE)
     
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange

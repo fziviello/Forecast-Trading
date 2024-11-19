@@ -4,7 +4,7 @@ import argparse
 import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
-from config import RETRY_LIMIT, INTERVAL
+from config import RETRY_LIMIT, INTERVAL_DATASET
 from folder_config import setup_folders, DATA_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_DATASET_FILE_PATH
 
 GENERATE_PLOT = False
@@ -114,9 +114,9 @@ if __name__ == "__main__":
     SYMBOL = (args.symbol).upper()
         
     if args.interval is not None :
-        INTERVAL = args.interval
+        INTERVAL_DATASET = args.interval
     
     if args.plot is not None:
         GENERATE_PLOT = args.plot
             
-    run_create_dataSet(INTERVAL,SYMBOL)
+    run_create_dataSet(INTERVAL_DATASET,SYMBOL)

@@ -378,11 +378,17 @@ def run_trading_model():
         })
 
     results = sorted(results, key=lambda x: float(x['Prezzo']))
-
+    printed_results = set()
+    
     print("\nPrevisioni Generate:\n")
     row_index = 1
     details_notify_list = []
-    for row_index, result in enumerate(results, start=1):
+    for result in results:
+        result_key = (result['Tipo'], result['Prezzo'])
+        if result_key in printed_results:
+            continue
+        printed_results.add(result_key)
+        
         details = (
             f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, "
             f"Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, "
@@ -418,7 +424,7 @@ def run_trading_model():
     results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
     if is_forecast_still_valid(results_df, FORECAST_VALIDITY_MINUTES):
-        sendNotify("\n".join(dict.fromkeys(details_notify_list)))
+        sendNotify("\n".join(details_notify_list))
     else:
         logging.info(f"La previsione è ancora valida")
         print(f"\033[93mLa previsione è ancora valida\n\033[0m")

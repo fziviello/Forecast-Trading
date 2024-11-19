@@ -81,7 +81,7 @@ def exchange_currency(base, target):
     try:
         data = yf.Ticker(ticker)
         exchange_rate = (data.history(period="1d")['Close'].iloc[-1])
-        exchange_rate = round(exchange_rate, 2)
+        exchange_rate = round(exchange_rate, 5)
         print(f"\033[94m\nIl tasso di cambio da {base} a {target} è: \033[92m{exchange_rate}€\033[0m\n")
         logging.info(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
         return exchange_rate

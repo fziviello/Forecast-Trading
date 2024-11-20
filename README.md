@@ -1,6 +1,6 @@
 # Model Training
 
-The script contains the model training programs that you can see running on https://www.mql5.com/it/users/fziviello87
+The script contains that schedules model training.
 
 ## Customizable Parameters
 
@@ -48,7 +48,7 @@ The script contains several parameters that you can modify to suit your needs:
 
 # Forecast BOT
 
-This script implements a Long Short-Term Memory (LSTM) neural network for predicting trading signals in Forex markets. It leverages historical price data to generate buy/sell signals, calculate potential profits and losses, and save predictions to a CSV file. The model also includes functionality for plotting results and managing previous model states
+This script implements a Long Short-Term Memory (LSTM) neural network for predicting trading signals in Forex markets. It leverages historical price data to generate buy/sell signals, calculate potential profits and losses, and save predictions to a CSV file. The model also includes functionality for plotting results and managing previous model states. Can you see running on https://www.mql5.com/it/users/fziviello87
 
 ## Features
 

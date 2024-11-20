@@ -1,6 +1,6 @@
 import os
 
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 LOG_DATASET_FILE_PATH = 'create_dataSet.log'
 LOG_FORECAST_FILE_PATH = 'forecast_bot.log'

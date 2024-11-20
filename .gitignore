@@ -18,6 +18,7 @@ results
 *.csv
 *.h5
 *.pkl
+*.env
 
 # Ignora file di sistema di macOS
 .DS_Store

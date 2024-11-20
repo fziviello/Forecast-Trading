@@ -5,7 +5,7 @@ import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
 from config import RETRY_LIMIT, INTERVAL_DATASET
-from folder_config import setup_folders, DATA_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_DATASET_FILE_PATH
+from utilities.folder_config import setup_folders, DATA_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_DATASET_FILE_PATH
 
 GENERATE_PLOT = False
 SHOW_PLOT = False

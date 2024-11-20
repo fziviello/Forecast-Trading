@@ -2,24 +2,25 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Input, LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.optimizers import Adam, RMSprop
+from tensorflow.keras.models import Sequential, load_model # type: ignore
+from tensorflow.keras.layers import Input, LSTM, Dense, Dropout # type: ignore
+from tensorflow.keras.callbacks import EarlyStopping # type: ignore
+from tensorflow.keras.optimizers import Adam, RMSprop # type: ignore
 import talib
 import joblib
 import os
-from datetime import datetime,timedelta,timezone
+from datetime import datetime, timedelta
 import pytz
-import mplfinance as mpf
 import logging
 import argparse
 import itertools
 import time
 import matplotlib.pyplot as plt
-from telegram_sender import TelegramSender
-from folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, MAX_MARGIN, MIN_MARGIN, LOT_SIZE, CONTRACT_SIZE, EXCHANGE_RATE, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from utilities.telegram_sender import TelegramSender
+from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
+from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from utilities.calculator import get_profit, get_loss, get_dynamic_margin
+from utilities.plots import plot_forex_candlestick
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
@@ -70,25 +71,6 @@ def sendNotify(msg):
         telegramSender = TelegramSender(BOT_TOKEN)
         telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
         
-def calculator_profit(predicted_take_profit, predicted_entry_price):
-    price_difference = predicted_take_profit - predicted_entry_price
-    profit = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
-    return round(abs(profit), 2)
-
-def calculator_loss(predicted_stop_loss, predicted_entry_price):
-    price_difference = predicted_entry_price - predicted_stop_loss
-    loss = price_difference * CONTRACT_SIZE * LOT_SIZE * EXCHANGE_RATE
-    return round(abs(loss), 2)
-
-def calculate_dynamic_margin(entry_price, volatility, atr, reward_ratio=1, recovery_ratio=2, atr_weight=0.5):
-    weighted_volatility = (volatility * (1 - atr_weight)) + (atr * atr_weight)
-    tp_margin = weighted_volatility * reward_ratio
-    sl_margin = tp_margin * recovery_ratio
-    max_margin = entry_price * MAX_MARGIN
-    min_margin = entry_price * MIN_MARGIN
-    tp_margin = min(max(tp_margin, min_margin), max_margin)
-    sl_margin = min(max(sl_margin, min_margin * recovery_ratio), max_margin * recovery_ratio)
-    return tp_margin, sl_margin
 
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
@@ -277,8 +259,8 @@ def validate_predictions():
                 'Close Attuale': actual_close,
                 'Take Profit': predicted_take_profit,
                 'Stop Loss': predicted_stop_loss,
-                'Guadagno': f"{calculator_profit(predicted_take_profit, predicted_entry_price):.2f}€",
-                'Perdita': f"{calculator_loss(predicted_stop_loss, predicted_entry_price):.2f}€"
+                'Guadagno': f"{get_profit(predicted_take_profit, predicted_entry_price, EXCHANGE_RATE):.2f}€",
+                'Perdita': f"{get_loss(predicted_stop_loss, predicted_entry_price, EXCHANGE_RATE):.2f}€"
             })
 
     if validation_results:
@@ -293,34 +275,6 @@ def validate_predictions():
             print(f"\033[91mTasso di previsioni non riuscite: {failure_rate:.2f}\033[0m")
         logging.info(f"Tasso di previsioni non riuscite: {failure_rate:.2f}")
         REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
-
-def plot_forex_candlestick(df, predictions):
-    df_plot = df[-N_PREDICTIONS:].copy()
-    
-    df_plot.index = pd.to_datetime(df_plot.index)
-
-    df_plot['Date'] = df_plot.index
-    df_plot.index.name = 'Date'
-    df_plot = df_plot[['Open', 'High', 'Low', 'Close']]
-
-    buy_signals = df_plot.iloc[[i for i, x in enumerate(predictions) if x == 1]]
-    sell_signals = df_plot.iloc[[i for i, x in enumerate(predictions) if x == 0]]
-
-    add_plot = []
-    if not buy_signals.empty:
-        add_plot.append(mpf.make_addplot(buy_signals['Close'], type='scatter', marker='^', color='blue', markersize=100, label='Segnali Buy'))
-    if not sell_signals.empty:
-        add_plot.append(mpf.make_addplot(sell_signals['Close'], type='scatter', marker='v', color='magenta', markersize=100, label='Segnali Sell'))
-
-    add_plot.append(mpf.make_addplot(df_plot['Close'].iloc[-N_PREDICTIONS:], color='red', label='Prezzo di Chiusura'))
-
-    mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
-             ylabel='Prezzo', savefig=PLOT_FILE_PATH, volume=False, show_nontrading=False)
-
-    if SHOW_PLOT:
-        mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
-             ylabel='Prezzo', volume=False, show_nontrading=False)
-        mpf.show()
 
 def run_trading_model():
     global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
@@ -364,7 +318,7 @@ def run_trading_model():
         volatility = df['Volatility'].iloc[-1]
         atr = df['ATR'].iloc[-1]
         
-        dynamic_tp_margin, dynamic_sl_margin = calculate_dynamic_margin(
+        dynamic_tp_margin, dynamic_sl_margin = get_dynamic_margin(
             entry_price=entry_price,
             volatility=volatility,
             atr=atr,
@@ -385,8 +339,8 @@ def run_trading_model():
         logging.debug(f"DEBUG: TP Margin: {dynamic_tp_margin}, SL Margin: {dynamic_sl_margin}")
         logging.debug(f"DEBUG: Take Profit: {take_profit}, Stop Loss: {stop_loss}")
 
-        hypothetical_profit = calculator_profit(take_profit, entry_price)
-        hypothetical_loss = calculator_loss(stop_loss, entry_price)
+        hypothetical_profit = get_profit(take_profit, entry_price, EXCHANGE_RATE)
+        hypothetical_loss = get_loss(stop_loss, entry_price, EXCHANGE_RATE)
 
         # Allineo tutte le date a UTC come il dataset
         data_obj = datetime.now()
@@ -469,7 +423,7 @@ def run_trading_model():
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     
     if GENERATE_PLOT:
-        plot_forex_candlestick(df, predictions)
+        plot_forex_candlestick(df, predictions, PLOT_FILE_PATH, SHOW_PLOT)
 
 if __name__ == "__main__":
         

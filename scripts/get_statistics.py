@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import argparse
 import logging
-from folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER
+from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER
 
 PREFIX_VALIDATION = 'forecast_validation'
 

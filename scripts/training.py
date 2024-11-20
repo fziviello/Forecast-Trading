@@ -5,7 +5,7 @@ import logging
 import time
 import argparse
 from datetime import datetime
-from folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
+from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
 from config import TIME_MINUTE_REPEAT, N_REPEAT
 
 SEND_TELEGRAM = False

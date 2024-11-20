@@ -1,4 +1,9 @@
-MAX_MARGIN = 0.03  # 3% del prezzo
+from dotenv import load_dotenv
+import os
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', 'secret.env'))
+
+MAX_MARGIN = 0.03 # 3% del prezzo
 MIN_MARGIN = 0.007 # 0.7% del prezzo
 LOT_SIZE = 0.01
 CONTRACT_SIZE = 100_000
@@ -12,8 +17,8 @@ INTERVAL_DATASET = '2m'
 FORECAST_VALIDITY_MINUTES = 30
 TIME_MINUTE_REPEAT = 5
 N_REPEAT = 60
-BOT_TOKEN = ""
-CHANNEL_TELEGRAM = ""
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_TELEGRAM = os.getenv("CHANNEL_TELEGRAM")
 
 PARAM_GRID = {
     'units': [50, 75, 100],

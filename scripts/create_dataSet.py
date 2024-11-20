@@ -11,7 +11,12 @@ GENERATE_PLOT = False
 SHOW_PLOT = False
 
 setup_folders()
-logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_DATASET_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(
+    filename=os.path.join(LOGS_FOLDER, LOG_DATASET_FILE_PATH),
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def getForexData(interval,symbol):
     

@@ -12,7 +12,11 @@ SEND_TELEGRAM = False
 
 setup_folders()
 
-logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_TRAINING_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    filename=os.path.join(LOGS_FOLDER, LOG_TRAINING_FILE_PATH),
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def run_scripts_for_symbol(symbol):
     global SEND_TELEGRAM

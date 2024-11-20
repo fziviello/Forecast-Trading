@@ -36,7 +36,11 @@ ACCURACY_LIST = []
 
 setup_folders()
 
-logging.basicConfig(filename=os.path.join(LOGS_FOLDER, LOG_FORECAST_FILE_PATH), level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    filename=os.path.join(LOGS_FOLDER, LOG_FORECAST_FILE_PATH),
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
     global FORECAST_RESULTS_PATH

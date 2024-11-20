@@ -100,6 +100,7 @@ You can change them in the config.py file
   - `learning_rate`: The learning rate to optimize the weights
   - `optimizer`: The optimization algorithm (e.g. adam, rmsprop)
 
+For env management you can create the `secret.env` file in the project root where you can create the production keys
 
 ## Args Parameters
 

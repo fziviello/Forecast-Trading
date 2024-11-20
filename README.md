@@ -1,6 +1,6 @@
 # Model Training
 
-The script contains that schedules model training
+The script contains the model training programs that you can see running on https://www.mql5.com/it/users/fziviello87
 
 ## Customizable Parameters
 

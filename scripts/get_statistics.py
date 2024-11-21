@@ -63,15 +63,31 @@ def print_validation_statistics(symbol):
         print(f"\033[91mImpossibile caricare i risultati di validazione per {symbol}\033[0m")
         logging.error(f"Impossibile caricare i risultati di validazione per {symbol}")
 
+def process_all_files():
+    validation_files = [f for f in os.listdir(RESULTS_FOLDER) if f.startswith(PREFIX_VALIDATION) and f.endswith('.csv')]
+    if not validation_files:
+        print("\033[91mNessun file di validazione trovato.\033[0m")
+        return
+
+    for file in validation_files:
+        symbol = file.replace(f"{PREFIX_VALIDATION}_", "").replace(".csv", "").upper()
+        logging.info(f"Trovato simbolo {symbol} da validare")
+        print_validation_statistics(symbol)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Visualizza le statistiche in base al simbolo")
     parser.add_argument("--notify", type=bool, required=False, help="Invia notifica al canale telegram")
-    parser.add_argument('--symbol', type=str, required=True, help="Simbolo per il quale effettuare le statistiche")
+    parser.add_argument('--symbol', type=str, required=False, help="Simbolo per il quale effettuare le statistiche")
+    parser.add_argument('--ALL', action='store_true', help="Analizza tutti i file di validazione disponibili")
     args = parser.parse_args()
 
-    if args.notify is not None :
+    if args.notify is not None:
         SEND_TELEGRAM = args.notify
         
-    SYMBOL = args.symbol.upper()
-    
-    print_validation_statistics(SYMBOL)
+    if args.ALL:
+        process_all_files()
+    elif args.symbol:
+        SYMBOL = args.symbol.upper()
+        print_validation_statistics(SYMBOL)
+    else:
+        print("\033[91mErrore: Specificare '--symbol' o '--ALL'.\033[0m")

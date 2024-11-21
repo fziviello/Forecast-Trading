@@ -71,12 +71,12 @@ def run_create_dataSet(interval,symbol):
     forex_data = getForexData(interval,symbol)
 
     if forex_data is not None:
-        if GENERATE_PLOT:
+        if GENERATE_PLOT is True:
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             plotName = os.path.join(PLOTS_FOLDER, f"{symbol}_{timestamp}.png")
             
-            if SHOW_PLOT:
+            if SHOW_PLOT is True:
                 mpf.plot(
                     forex_data.set_index('Datetime'),
                     type='candle', 

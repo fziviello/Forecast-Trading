@@ -127,6 +127,7 @@ This script calculates the statistics obtained by the model during its training.
 - `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
 - `ALL`: Analyze all available validation files (--ALL) *REQUIRED
 - `NOTIFY`: If True send the predictions to Telegram Channel
+- `GENERATE_PLOT`: If True Make the plot (--plot)
 
 ## Run
 

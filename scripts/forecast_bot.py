@@ -114,7 +114,7 @@ def plot_model_performance(accuracy_list, plotFile):
     plt.tight_layout()
     plt.savefig(plotFile)
     
-    if SHOW_PLOT:
+    if SHOW_PLOT is True:
         plt.show()
 
 def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer_name):
@@ -425,14 +425,14 @@ def run_trading_model():
         else:
             results_df.to_csv(FORECAST_RESULTS_PATH, mode='w', index=False)
     
-    if GENERATE_PLOT:
+    if GENERATE_PLOT is True:
         plot_forex_candlestick(df, predictions, PLOT_FILE_PATH, SHOW_PLOT)
 
 if __name__ == "__main__":
         
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
-    parser.add_argument("--notify", type=bool, required=False, help="Invia notifica al canale telegram")
-    parser.add_argument("--plot", type=bool, required=False, help="Generare il grafico")
+    parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
     parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
     parser.add_argument("--favoriteRate", type=str, required=False, help="Inserire il rate di conversione")
     parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")

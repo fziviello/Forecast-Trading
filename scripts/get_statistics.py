@@ -2,12 +2,16 @@ import os
 import pandas as pd
 import argparse
 import logging
+from datetime import datetime
 from config import BOT_TOKEN, CHANNEL_TELEGRAM
 from utilities.telegram_sender import TelegramSender
-from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER
+from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER, PLOTS_FOLDER
+from utilities.plots import plot_statistics
 
-SEND_TELEGRAM = False
 PREFIX_VALIDATION = 'forecast_validation'
+SEND_TELEGRAM = False
+GENERATE_PLOT = False
+SHOW_PLOT = False
 
 setup_folders()
 
@@ -58,34 +62,48 @@ def print_validation_statistics(symbol):
         sendNotify(validation_stats)
         
         logging.info(validation_stats)
-        
+        return {'symbol': symbol, 'success_rate': success_rate, 'failure_rate': failure_rate}
     else:
         print(f"\033[91mImpossibile caricare i risultati di validazione per {symbol}\033[0m")
         logging.error(f"Impossibile caricare i risultati di validazione per {symbol}")
+        return None
 
-def process_all_files():
+def process_all_symbol():
+    global PLOTS_FOLDER, GENERATE_PLOT, SHOW_PLOT
     validation_files = [f for f in os.listdir(RESULTS_FOLDER) if f.startswith(PREFIX_VALIDATION) and f.endswith('.csv')]
     if not validation_files:
         print("\033[91mNessun file di validazione trovato.\033[0m")
         return
 
+    statistics = []
     for file in validation_files:
         symbol = file.replace(f"{PREFIX_VALIDATION}_", "").replace(".csv", "").upper()
         logging.info(f"Trovato simbolo {symbol} da validare")
-        print_validation_statistics(symbol)
+        stats = print_validation_statistics(symbol)
+        if stats:
+            statistics.append(stats)
+    
+    if statistics and GENERATE_PLOT is True:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        plot_file_path = os.path.join(PLOTS_FOLDER, f"validation_statistics_{timestamp}.png")
+        plot_statistics(statistics, plot_file_path, SHOW_PLOT)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Visualizza le statistiche in base al simbolo")
-    parser.add_argument("--notify", type=bool, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
     parser.add_argument('--symbol', type=str, required=False, help="Simbolo per il quale effettuare le statistiche")
     parser.add_argument('--ALL', action='store_true', help="Analizza tutti i file di validazione disponibili")
     args = parser.parse_args()
 
     if args.notify is not None:
         SEND_TELEGRAM = args.notify
+
+    if args.plot is not None:
+        GENERATE_PLOT = args.plot
         
     if args.ALL:
-        process_all_files()
+        process_all_symbol()
     elif args.symbol:
         SYMBOL = args.symbol.upper()
         print_validation_statistics(SYMBOL)

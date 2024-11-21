@@ -75,7 +75,6 @@ def sendNotify(msg):
         telegramSender = TelegramSender(BOT_TOKEN)
         telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
         
-
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
     try:

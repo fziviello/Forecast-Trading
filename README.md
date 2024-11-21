@@ -125,10 +125,11 @@ This script calculates the statistics obtained by the model during its training.
 ## Args Parameters
 
 - `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+- `NOTIFY`: If True send the predictions to Telegram Channel
 
 ## Run
 
-- Start Get Statistics: `python3 scripts/get_statistics.py --symbol AUDJPY`
+- Start Get Statistics: `python3 scripts/get_statistics.py --symbol AUDJPY --notify True`
 
 ### Use Venv
 

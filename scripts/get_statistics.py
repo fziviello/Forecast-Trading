@@ -4,6 +4,7 @@ import argparse
 import logging
 from datetime import datetime
 from config import BOT_TOKEN, CHANNEL_TELEGRAM
+from utilities.utility import str_to_bool
 from utilities.telegram_sender import TelegramSender
 from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_STATISTICS_FILE_PATH, RESULTS_FOLDER, PLOTS_FOLDER
 from utilities.plots import plot_statistics
@@ -97,10 +98,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.notify is not None:
-        SEND_TELEGRAM = args.notify
+        SEND_TELEGRAM = str_to_bool(args.notify)
 
     if args.plot is not None:
-        GENERATE_PLOT = args.plot
+        GENERATE_PLOT = str_to_bool(args.plot)
         
     if args.ALL:
         process_all_symbol()

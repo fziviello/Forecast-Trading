@@ -5,6 +5,7 @@ import logging
 import time
 import argparse
 from datetime import datetime
+from utilities.utility import str_to_bool
 from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
 from config import TIME_MINUTE_REPEAT, N_REPEAT
 
@@ -43,7 +44,7 @@ def run_scripts_for_symbol(symbol):
 
     print(f"\n\033[93m*** Avvio Forecast per {symbol}\033[0m\n")
     command = ["python", "forecast_bot.py", "--symbol", symbol]
-    command.extend(["--notify", str(SEND_TELEGRAM).upper()])
+    command.extend(["--notify", str(SEND_TELEGRAM).lower()])
 
     process2 = subprocess.Popen(
         command,
@@ -89,16 +90,40 @@ def schedule_scripts(symbols, N_REPEAT):
         time.sleep(1)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Scheduler per esecuzione script multipli.")
-    parser.add_argument("--symbols", type=str, required=True, help="Lista di simboli separati da virgola (es: EURUSD,AUDJPY,GBPUSD)")
+    parser = argparse.ArgumentParser(description="Scheduler per Esecuzione Script Multipli")
+    parser.add_argument("--symbols", type=str, required=True, help="Lista di simboli separati da virgola (es: EURUSD,AUDJPY,EURUSD,GBPUSD)")
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
     args = parser.parse_args()
     
     if args.notify is not None :
-        SEND_TELEGRAM = args.notify
+        SEND_TELEGRAM = str_to_bool(args.notify)
     
     symbols = (args.symbols.upper()).split(',')
     now = datetime.now()
     print(f'\033[96mTrainer Avviato il {now.strftime("%Y-%m-%d %H:%M:%S")} per {N_REPEAT} esecuzioni\033[0m\n')
     
     schedule_scripts(symbols, N_REPEAT)
+    
+    #avvio statistiche
+    print(f"\033[93m*** Genero le Statistiche del Training  \033[0m\n")
+    command = ["python", "get_statistics.py", "--ALL"]
+    command.extend(["--notify", str(SEND_TELEGRAM).lower()])
+
+    process3 = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        bufsize=1,
+        text=True
+    )
+
+    if process3.stdout:
+        for line in process3.stdout:
+            print(line, end='', flush=True)
+    if process3.stderr:
+        for line in process3.stderr:
+            logging.error(line.strip())
+
+    process3.stdout.close()
+    process3.stderr.close()
+    

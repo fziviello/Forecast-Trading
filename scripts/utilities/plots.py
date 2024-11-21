@@ -52,3 +52,31 @@ def plot_forex_candlestick(df, predictions, plot_file_path, show_plot=False):
         mpf.plot(df_plot, type='candle', style='charles', addplot=add_plot, title='Forecast',
              ylabel='Prezzo', volume=False, show_nontrading=False)
         mpf.show()
+        
+def plot_model_performance(accuracy_list, plot_file_path, show_plot=False):    
+    units = [config['units'] for config in accuracy_list]
+    dropout = [config['dropout'] for config in accuracy_list]
+    epochs = [config['epochs'] for config in accuracy_list]
+    batch_size = [config['batch_size'] for config in accuracy_list]
+    learning_rate = [config['learning_rate'] for config in accuracy_list]
+    optimizer = [config['optimizer'] for config in accuracy_list]
+    accuracies = [config['accuracy'] for config in accuracy_list]
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+    scatter = ax.scatter(range(len(accuracies)), accuracies, c=accuracies, cmap='viridis', edgecolors='k', s=100)
+
+    ax.set_title("Performance dei Modelli durante la Ricerca a Griglia", fontsize=14)
+    ax.set_xlabel("Configurazione dei Parametri", fontsize=12)
+    ax.set_ylabel("Accuratezza", fontsize=12)
+    ax.set_xticks(range(len(accuracies)))
+    ax.set_xticklabels([
+        f"Units={u}\nDropout={d}\nEpochs={e}\nBatch={b}\nLR={lr}\nOpt={opt}"
+        for u, d, e, b, lr, opt in zip(units, dropout, epochs, batch_size, learning_rate, optimizer)
+    ], rotation=90, fontsize=8)
+
+    plt.colorbar(scatter, ax=ax, label="Accuratezza")
+    plt.tight_layout()
+    plt.savefig(plot_file_path)
+    
+    if show_plot is True:
+        plt.show()

@@ -15,12 +15,12 @@ import logging
 import argparse
 import itertools
 import time
-import matplotlib.pyplot as plt
+from utilities.utility import str_to_bool
 from utilities.telegram_sender import TelegramSender
 from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
 from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
 from utilities.calculator import get_profit, get_loss, get_dynamic_margin
-from utilities.plots import plot_forex_candlestick
+from utilities.plots import plot_forex_candlestick, plot_model_performance
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
@@ -69,7 +69,7 @@ def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
         logging.error(f"Errore durante la verifica della notifica: {e}")
         print(f"\033[91m'Errore durante la verifica della notifica: {e}'\033[0m")
         return False
-    
+
 def sendNotify(msg):
     if SEND_TELEGRAM is True:
         telegramSender = TelegramSender(BOT_TOKEN)
@@ -88,34 +88,6 @@ def exchange_currency(base, target):
         print(f"\033[91m'Errore nel recuperare il tasso di cambio, verrà utilizzato il suo valore di default'\033[0m")
         logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
         return None
-
-def plot_model_performance(accuracy_list, plotFile):    
-    units = [config['units'] for config in accuracy_list]
-    dropout = [config['dropout'] for config in accuracy_list]
-    epochs = [config['epochs'] for config in accuracy_list]
-    batch_size = [config['batch_size'] for config in accuracy_list]
-    learning_rate = [config['learning_rate'] for config in accuracy_list]
-    optimizer = [config['optimizer'] for config in accuracy_list]
-    accuracies = [config['accuracy'] for config in accuracy_list]
-
-    fig, ax = plt.subplots(figsize=(12, 7))
-    scatter = ax.scatter(range(len(accuracies)), accuracies, c=accuracies, cmap='viridis', edgecolors='k', s=100)
-
-    ax.set_title("Performance dei Modelli durante la Ricerca a Griglia", fontsize=14)
-    ax.set_xlabel("Configurazione dei Parametri", fontsize=12)
-    ax.set_ylabel("Accuratezza", fontsize=12)
-    ax.set_xticks(range(len(accuracies)))
-    ax.set_xticklabels([
-        f"Units={u}\nDropout={d}\nEpochs={e}\nBatch={b}\nLR={lr}\nOpt={opt}"
-        for u, d, e, b, lr, opt in zip(units, dropout, epochs, batch_size, learning_rate, optimizer)
-    ], rotation=90, fontsize=8)
-
-    plt.colorbar(scatter, ax=ax, label="Accuratezza")
-    plt.tight_layout()
-    plt.savefig(plotFile)
-    
-    if SHOW_PLOT is True:
-        plt.show()
 
 def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer_name):
     global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST    
@@ -152,7 +124,7 @@ def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch
         logging.info(f"Configurazione migliore trovata per {SYMBOL}: {BEST_PARAMS} con accuracy={BEST_ACCURACY:.3f}%")
     
 def grid_search_optimization(X_train, y_train, X_test, y_test):
-    global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST, PLOT_MODEL_FILE_PATH
+    global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST, PLOT_MODEL_FILE_PATH, GENERATE_PLOT
 
     BEST_ACCURACY = 0.0
     BEST_PARAMS = {}
@@ -168,7 +140,9 @@ def grid_search_optimization(X_train, y_train, X_test, y_test):
         logging.info(f"Test Configurazione per {SYMBOL}: units={units}, dropout={dropout}, epochs={epochs}, batch_size={batch_size}, learning_rate={learning_rate}, optimizer={optimizer}")
         create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer)
 
-    plot_model_performance(ACCURACY_LIST, PLOT_MODEL_FILE_PATH)
+    if GENERATE_PLOT is True:
+        plot_model_performance(ACCURACY_LIST, PLOT_MODEL_FILE_PATH)
+    
     end_time = time.time()
     elapsed_time = end_time - start_time
 
@@ -280,7 +254,7 @@ def validate_predictions():
         REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
 
 def run_trading_model():
-    global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, REPEAT_TRAINING, INTERVAL_MINUTES
+    global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, GENERATE_PLOT, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 
@@ -440,7 +414,7 @@ if __name__ == "__main__":
     SYMBOL = (args.symbol).upper()
     
     if args.notify is not None :
-        SEND_TELEGRAM = args.notify
+        SEND_TELEGRAM = str_to_bool(args.notify)
         
     if args.interval is not None :
         FAVORITE_RATE = args.favoriteRate
@@ -449,7 +423,7 @@ if __name__ == "__main__":
         INTERVAL_MINUTES = args.interval
         
     if args.plot is not None:
-        GENERATE_PLOT = args.plot
+        GENERATE_PLOT = str_to_bool(args.plot)
             
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         

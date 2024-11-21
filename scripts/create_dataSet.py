@@ -5,6 +5,7 @@ import yfinance as yf
 import mplfinance as mpf
 from datetime import datetime, timedelta
 from config import RETRY_LIMIT, INTERVAL_DATASET
+from utilities.utility import str_to_bool
 from utilities.folder_config import setup_folders, DATA_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_DATASET_FILE_PATH
 
 GENERATE_PLOT = False
@@ -122,6 +123,6 @@ if __name__ == "__main__":
         INTERVAL_DATASET = args.interval
     
     if args.plot is not None:
-        GENERATE_PLOT = args.plot
+        GENERATE_PLOT = str_to_bool(args.plot)
             
     run_create_dataSet(INTERVAL_DATASET,SYMBOL)

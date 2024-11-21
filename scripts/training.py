@@ -105,7 +105,7 @@ if __name__ == "__main__":
     schedule_scripts(symbols, N_REPEAT)
     
     #avvio statistiche
-    print(f"\033[93m*** Genero le Statistiche del Training  \033[0m\n")
+    print(f"\033[93m*** Genero le Statistiche dei Training\033[0m\n")
     command = ["python", "get_statistics.py", "--ALL"]
     command.extend(["--notify", str(SEND_TELEGRAM).lower()])
 

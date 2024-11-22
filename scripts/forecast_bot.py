@@ -17,13 +17,15 @@ import itertools
 import time
 from utilities.utility import str_to_bool
 from utilities.telegram_sender import TelegramSender
+from utilities.forwarder_MT5 import TradingAPIClient
 from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from config import IP_SERVER_TRADING, PORT_SERVER_TRADING, BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
 from utilities.calculator import get_profit, get_loss, get_dynamic_margin
 from utilities.plots import plot_forex_candlestick, plot_model_performance
 
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
+SEND_SERVER_SIGNAL = False
 SHOW_PLOT = False
 OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
@@ -41,6 +43,8 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+tradingClient = TradingAPIClient("http://"+IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING)
 
 def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
     global FORECAST_RESULTS_PATH
@@ -351,6 +355,9 @@ def run_trading_model():
             continue
         printed_results.add(result_key)
         
+        if SEND_SERVER_SIGNAL:
+            tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+                        
         details = (
             f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, "
             f"Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, "
@@ -405,6 +412,7 @@ def run_trading_model():
 if __name__ == "__main__":
         
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
+    parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
     parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
     parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
@@ -413,6 +421,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     SYMBOL = (args.symbol).upper()
     
+    if args.sendSignal is not None :
+        SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
+        
     if args.notify is not None :
         SEND_TELEGRAM = str_to_bool(args.notify)
         

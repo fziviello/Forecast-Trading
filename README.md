@@ -13,10 +13,11 @@ You can change them in the config.py file
 
 - `SYMBOL`: The Name of Stock Exchange Symbol separated by comma for multi-currency training (--symbol) *REQUIRED
 - `NOTIFY`: If True send the predictions to Telegram Channel
+- `SEND_SERVER_SIGNAL`: If True send signal to MT5 Server
 
 ## Run
 
-- Start Training : `python3 scripts/training.py --symbol AUDJPY,AUDNZD,AUDCHF --notify True`
+- Start Training : `python3 scripts/training.py --symbol AUDJPY,AUDNZD,AUDCHF --notify True --sendSignal True`
 
 # DataSet Generator
 
@@ -105,6 +106,7 @@ For env management you can create the `secret.env` file in the project root wher
 ## Args Parameters
 
 - `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+- `SEND_SERVER_SIGNAL`: If True send signal to MT5 Server
 - `NOTIFY`: If True send the predictions to Telegram Channel
 - `FAVORITE_RATE`: Favorite conversion rate (--favoriteRate) (default EUR)
 - `INTERVAL_MINUTES`: Interval expressed in minutes to align with the dataset (--interval)
@@ -112,7 +114,7 @@ For env management you can create the `secret.env` file in the project root wher
 
 ## Run
 
-- Start Forecast: `python3 scripts/forecast_bot.py --symbol AUDJPY --notify True`
+- Start Forecast: `python3 scripts/forecast_bot.py --symbol AUDJPY --notify True --sendSignal True`
 
 # Calculate Statistics
 

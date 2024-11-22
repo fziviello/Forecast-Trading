@@ -10,6 +10,7 @@ from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FIL
 from config import TIME_MINUTE_REPEAT, N_REPEAT
 
 SEND_TELEGRAM = False
+SEND_SERVER_SIGNAL = False
 
 setup_folders()
 
@@ -45,6 +46,7 @@ def run_scripts_for_symbol(symbol):
     print(f"\n\033[93m*** Avvio Forecast per {symbol}\033[0m\n")
     command = ["python", "forecast_bot.py", "--symbol", symbol]
     command.extend(["--notify", str(SEND_TELEGRAM).lower()])
+    command.extend(["--sendSignal", str(SEND_SERVER_SIGNAL).lower()])
 
     process2 = subprocess.Popen(
         command,
@@ -93,8 +95,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scheduler per Esecuzione Script Multipli")
     parser.add_argument("--symbols", type=str, required=True, help="Lista di simboli separati da virgola (es: AUDJPY,AUDNZD,AUDCHF)")
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
     args = parser.parse_args()
     
+    if args.sendSignal is not None :
+        SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
+        
     if args.notify is not None :
         SEND_TELEGRAM = str_to_bool(args.notify)
     

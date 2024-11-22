@@ -91,7 +91,7 @@ def schedule_scripts(symbols, N_REPEAT):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scheduler per Esecuzione Script Multipli")
-    parser.add_argument("--symbols", type=str, required=True, help="Lista di simboli separati da virgola (es: EURUSD,AUDJPY,EURUSD,GBPUSD)")
+    parser.add_argument("--symbols", type=str, required=True, help="Lista di simboli separati da virgola (es: AUDJPY,AUDNZD,AUDCHF)")
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
     args = parser.parse_args()
     

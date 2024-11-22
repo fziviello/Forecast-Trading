@@ -44,7 +44,8 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-tradingClient = TradingAPIClient("http://"+IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING)
+urlServer = "http://" + IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING
+tradingClient = TradingAPIClient(urlServer)
 
 def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
     global FORECAST_RESULTS_PATH
@@ -216,6 +217,7 @@ def validate_predictions():
 
     for i, row in prev_predictions.iterrows():
         pred_datetime = pd.to_datetime(row['Data Previsione'])
+        pred_ticket = row['Ticket']
         actual_data = df.loc[df['Datetime'] >= pred_datetime]
 
         if not actual_data.empty:
@@ -233,6 +235,7 @@ def validate_predictions():
                 result = "Previsione non avvenuta"
             
             validation_results.append({
+                'Ticket': pred_ticket,
                 'Data Previsione': pred_datetime,
                 'Tipo': row['Tipo'],
                 'Risultato': result,
@@ -356,13 +359,16 @@ def run_trading_model():
         printed_results.add(result_key)
         
         if SEND_SERVER_SIGNAL:
-            tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+            result['Ticket'] = tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+        else:
+            result['Ticket'] = "-"    
                         
         details = (
             f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, "
             f"Stop Loss: {result['Stop Loss']}, Take Profit: {result['Take Profit']}, "
             f"Guadagno: {result['Guadagno']}, Perdita: {result['Perdita']}"
         )
+        
         circle_emoji = "🔵" if result['Tipo'] in ["Buy", "Buy Limit", "Buy Stop"] else "🔴"
         max_width = max(len(result['Prezzo'].split('.')[0]), 3) + 9
         details_notify = (
@@ -390,7 +396,7 @@ def run_trading_model():
     print("\n")
         
     results_df = pd.DataFrame(results)
-    results_df = results_df[['Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
+    results_df = results_df[['Ticket','Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
     if is_forecast_still_valid(results_df, FORECAST_VALIDITY_MINUTES):
         sendNotify("\n".join(details_notify_list))

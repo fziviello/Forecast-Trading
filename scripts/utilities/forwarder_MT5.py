@@ -35,7 +35,7 @@ class TradingAPIClient:
         data = {k: v for k, v in data.items() if v is not None}
         
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(data))
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
             data = response.json()
             if response.status_code == 200:
                 order_id = data["order_id"]
@@ -50,11 +50,14 @@ class TradingAPIClient:
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
+            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            return "Timeout Server Error"
+        except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
-            logging.error(f"Errore durante la richiesta al server: {str(e)}")
-        
-        return "Server Request Error"
+            logging.error(f"Errore durante la richiesta al server: {str(e)}")      
+            return "Server Request Error"
 
     def update_order(self, ticket, stop_loss=None, take_profit=None):
         url = f"{self.server_url}/order/update"
@@ -69,7 +72,7 @@ class TradingAPIClient:
         data = {k: v for k, v in data.items() if v is not None}
 
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(data))
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
             data = response.json()
             if response.status_code == 200:
                 order_id = data["order_id"]
@@ -83,12 +86,15 @@ class TradingAPIClient:
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
+            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            return "Timeout Server Error"
+        except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
-            logging.error(f"Errore durante la richiesta al server: {str(e)}")
+            logging.error(f"Errore durante la richiesta al server: {str(e)}")      
+            return "Server Request Error"
             
-        return "Server Request Error"
-
     def delete_order(self, ticket):
         url = f"{self.server_url}/order/delete"
         headers = {"Content-Type": "application/json"}
@@ -98,7 +104,7 @@ class TradingAPIClient:
         }
 
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(data))
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
             data = response.json()
             if response.status_code == 200:
                 order_id = data["order_id"]
@@ -112,7 +118,11 @@ class TradingAPIClient:
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
-        except Exception as e:
+        except requests.exceptions.Timeout:
+            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
+            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            return "Timeout Server Error"
+        except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
-            logging.error(f"Errore durante la richiesta al server: {str(e)}")
-        return "Server Request Error"
+            logging.error(f"Errore durante la richiesta al server: {str(e)}")      
+            return "Server Request Error"

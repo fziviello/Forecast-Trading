@@ -19,8 +19,8 @@ class TradingAPIClient:
             stop_loss = round(float(stop_loss), 3) if stop_loss is not None else None
             take_profit = round(float(take_profit), 3) if take_profit is not None else None
         except ValueError as e:
-            print(f"Errore nella conversione dei parametri in float: {e}")
-            logging.error(f"Errore nella conversione dei parametri in float: {e}")
+            print(f"\033[91mErrore nella conversione dei parametri in float: {str(e)}\033[0m")
+            logging.error(f"Errore nella conversione dei parametri in float: {str(e)}")
             return
     
         data = {
@@ -38,20 +38,20 @@ class TradingAPIClient:
             response = requests.post(url, headers=headers, data=json.dumps(data))
             data = response.json()
             if response.status_code == 200:
-                print(f"Ordine creato con successo: {data}")
-                logging.info(f"Ordine creato con successo: {data}")
                 order_id = data["order_id"]
+                print(f"\033[92mOrdine piazzato con successo {order_id}\033[0m")
+                logging.info(f"Ordine piazzato con successo: {data}")
                 return order_id
                 
             else:
-                print(f"Errore nella creazione dell'ordine: {response.status_code}, {response.text}")
-                logging.error(f"Errore nella creazione dell'ordine: {response.status_code}, {response.text}")
                 error_message = data["message"]
+                print(f"\033[91mOrdine non piazzato: {error_message}\033[0m")
+                logging.error(f"Errore nella creazione dell'ordine: {response.status_code}, {response.text}")
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
         except Exception as e:
-            print(f"Errore durante la richiesta al server: {str(e)}")
+            print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
             logging.error(f"Errore durante la richiesta al server: {str(e)}")
         
         return "Server Request Error"
@@ -72,19 +72,19 @@ class TradingAPIClient:
             response = requests.post(url, headers=headers, data=json.dumps(data))
             data = response.json()
             if response.status_code == 200:
-                print(f"Ordine aggiornato con successo: {response.json()}")
-                logging.info(f"Ordine aggiornato con successo: {response.json()}")
                 order_id = data["order_id"]
+                print(f"\033[92mOrdine aggioranto: {order_id}\033[0m")
+                logging.info(f"Ordine aggiornato: {response.json()}")
                 return order_id
             else:
-                print(f"Errore nell'aggiornamento dell'ordine: {response.status_code}, {response.text}")
-                logging.error(f"Errore nell'aggiornamento dell'ordine: {response.status_code}, {response.text}")
                 error_message = data["message"]
+                print(f"\033[91mOrdine non aggioranto: {error_message}\033[0m")
+                logging.error(f"Errore nell'aggiornamento dell'ordine: {response.status_code}, {response.text}")
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
         except Exception as e:
-            print(f"Errore durante la richiesta al server: {str(e)}")
+            print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
             logging.error(f"Errore durante la richiesta al server: {str(e)}")
             
         return "Server Request Error"
@@ -101,18 +101,18 @@ class TradingAPIClient:
             response = requests.post(url, headers=headers, data=json.dumps(data))
             data = response.json()
             if response.status_code == 200:
-                print(f"Ordine cancellato con successo: {response.json()}")
-                logging.info(f"Ordine cancellato con successo: {response.json()}")
                 order_id = data["order_id"]
+                print(f"\033[92mOrdine eliminato con successo {order_id}\033[0m")
+                logging.info(f"Ordine eliminato con successo: {response.json()}")
                 return order_id
             else:
-                print(f"Errore nella cancellazione dell'ordine: {response.status_code}, {response.text}")
-                logging.error(f"Errore nella cancellazione dell'ordine: {response.status_code}, {response.text}")
                 error_message = data["message"]
+                print(f"\033[91mOrdine non eliminato: {error_message}\033[0m")
+                logging.error(f"Errore nella cancellazione dell'ordine: {response.status_code}, {response.text}")
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
         
         except Exception as e:
-            print(f"Errore durante la richiesta al server: {str(e)}")
+            print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
             logging.error(f"Errore durante la richiesta al server: {str(e)}")
         return "Server Request Error"

@@ -47,6 +47,33 @@ logging.basicConfig(
 urlServer = "http://" + IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING
 tradingClient = TradingAPIClient(urlServer)
 
+def sendNotify(msg):
+    if SEND_TELEGRAM is True:
+        telegramSender = TelegramSender(BOT_TOKEN)
+        telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
+        
+def forex_market_status(symbol: str) -> bool:
+    forex_open = time(22, 0)  # 22:00 UTC
+    forex_close = time(22, 0)  # 22:00 UTC (venerdì)
+    
+    now_utc = datetime.now(pytz.utc)
+    current_time = now_utc.time()
+    current_weekday = now_utc.weekday()  # 0 = lunedì, 6 = domenica
+    
+    if current_weekday == 6 or (current_weekday == 5 and current_time >= forex_close):
+        print("Il mercato è chiuso")
+        print(f"\033[91mIl mercato è chiuso {symbol}\033[0m")
+        logging.info(f"Il mercato è chiuso\n")
+        return False
+    elif current_weekday == 0 and current_time < forex_open:
+        print(f"\033[91mIl mercato è chiuso {symbol}\033[0m")
+        logging.info(f"Il mercato è chiuso\n")
+        return False
+    else:
+        print(f"\033[92mIl mercato è aperto {symbol}\033[0m")
+        logging.info(f"Il mercato è aperto\n")
+        return True
+    
 def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
     global FORECAST_RESULTS_PATH
     try:
@@ -75,11 +102,6 @@ def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
         print(f"\033[91m'Errore durante la verifica della notifica: {e}'\033[0m")
         return False
 
-def sendNotify(msg):
-    if SEND_TELEGRAM is True:
-        telegramSender = TelegramSender(BOT_TOKEN)
-        telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
-        
 def exchange_currency(base, target):
     ticker = f"{base}{target}=X"
     try:
@@ -459,4 +481,5 @@ if __name__ == "__main__":
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
 
-    run_trading_model()
+    if forex_market_status:
+        run_trading_model()

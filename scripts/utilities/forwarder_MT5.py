@@ -59,12 +59,13 @@ class TradingAPIClient:
             logging.error(f"Errore durante la richiesta al server: {str(e)}")      
             return "Server Request Error"
 
-    def update_order(self, ticket, stop_loss=None, take_profit=None):
+    def update_order(self, ticket, price, stop_loss, take_profit):
         url = f"{self.server_url}/order/update"
         headers = {"Content-Type": "application/json"}
         
         data = {
             "ticket": ticket,
+            "price": price,
             "stop_loss": stop_loss,
             "take_profit": take_profit
         }

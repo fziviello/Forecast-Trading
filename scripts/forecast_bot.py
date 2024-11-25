@@ -383,7 +383,7 @@ def run_trading_model():
         if SEND_SERVER_SIGNAL:
             result['Ticket'] = tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
         else:
-            result['Ticket'] = "-"    
+            result['Ticket'] = "Non Piazzata"
                         
         details = (
             f"Data: {result['Data Previsione']}, Tipo: {result['Tipo']}, Prezzo: {result['Prezzo']}, "

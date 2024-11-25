@@ -42,20 +42,24 @@ def print_validation_statistics(symbol):
     validation_df = get_validation_results(symbol)
     if validation_df is not None:
         total_predictions = len(validation_df)
+        placed_predictions = validation_df[pd.to_numeric(validation_df['Ticket'], errors='coerce').isna()].shape[0]
         successful_predictions = validation_df[validation_df['Risultato'].str.contains('Successo')].shape[0]
         failure_predictions = total_predictions - successful_predictions
 
         success_rate = (successful_predictions / total_predictions * 100) if total_predictions > 0 else 0
         failure_rate = (failure_predictions / total_predictions * 100) if total_predictions > 0 else 0
+        placed_rate = (placed_predictions / total_predictions * 100) if total_predictions > 0 else 0
 
         print(f"Statistiche di validazione per il simbolo \033[93m{symbol}\033[0m:\n")
         print(f"Totale Previsioni: \033[94m{total_predictions}\033[0m")
-        print(f"Soddisfatte: \033[92m{successful_predictions} (\033[92m{success_rate:.2f}%\033[0m)")
-        print(f"Insoddisfatte: \033[91m{failure_predictions} (\033[91m{failure_rate:.2f}%\033[0m)\n")
+        print(f"Soddisfatte: \033[92m{successful_predictions} \033[92m({success_rate:.2f}%)\033[0m")
+        print(f"Ordini Piazzati: \033[93m{placed_predictions} \033[93m({placed_rate:.2f}%)\033[0m")
+        print(f"Insoddisfatte: \033[91m{failure_predictions} \033[91m({failure_rate:.2f}%)\033[0m\n")
 
         validation_stats = (
             f"Statistiche di validazione per {symbol}:\n"
             f"Totale Previsioni: {total_predictions}\n"
+            f"Piazzate: {placed_predictions} ({placed_predictions:.2f}%)\n"
             f"Soddisfatte: {successful_predictions} ({success_rate:.2f}%)\n"
             f"Insoddisfatte: {failure_predictions} ({failure_rate:.2f}%)"
         )

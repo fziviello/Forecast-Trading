@@ -152,6 +152,9 @@ if you have problems installing ta-lib proceed as follows
 - `TA_LIBRARY_PATH=$(brew --prefix ta-lib)/lib`
 - `CFLAGS="-I$TA_INCLUDE_PATH" LDFLAGS="-L$TA_LIBRARY_PATH" pip install ta-lib`
 
+To use the `SEND_SERVER_SIGNAL` functionality you can use APIM MT5 
+- `https://github.com/fziviello/APIM_MT5`
+
 
 ![screenshot1](/Screenshot_1.png?raw=true)
 

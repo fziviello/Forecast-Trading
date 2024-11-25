@@ -249,9 +249,9 @@ def validate_predictions():
             predicted_stop_loss = float(row['Stop Loss'])
 
             if actual_close >= predicted_take_profit:
-                result = "Successo - Take Profit raggiunto"
+                result = "Successo"
             elif actual_close <= predicted_stop_loss:
-                result = "Fallimento - Stop Loss raggiunto"
+                result = "Fallimento"
                 unsuccessful_count += 1
             else:
                 result = "Previsione non avvenuta"

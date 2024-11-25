@@ -42,26 +42,43 @@ def print_validation_statistics(symbol):
     validation_df = get_validation_results(symbol)
     if validation_df is not None:
         total_predictions = len(validation_df)
+
         placed_predictions = validation_df[pd.to_numeric(validation_df['Ticket'], errors='coerce').isna()].shape[0]
+        satisfied_placed_orders = validation_df[(validation_df['Risultato'] == 'Successo') & (pd.to_numeric(validation_df['Ticket'], errors='coerce').isna())].shape[0]
+        failure_placed_orders = validation_df[(validation_df['Risultato'] == 'Fallimento') & (pd.to_numeric(validation_df['Ticket'], errors='coerce').isna())].shape[0]
+        not_happen_placed_orders = placed_predictions - satisfied_placed_orders
+        
         successful_predictions = validation_df[validation_df['Risultato'].str.contains('Successo')].shape[0]
-        failure_predictions = total_predictions - successful_predictions
+        failure_predictions = validation_df[validation_df['Risultato'].str.contains('Fallimento')].shape[0]
+        not_happen_prediction = total_predictions - successful_predictions
 
         success_rate = (successful_predictions / total_predictions * 100) if total_predictions > 0 else 0
+        not_happen_rate = (not_happen_prediction / total_predictions * 100) if total_predictions > 0 else 0
         failure_rate = (failure_predictions / total_predictions * 100) if total_predictions > 0 else 0
-        placed_rate = (placed_predictions / total_predictions * 100) if total_predictions > 0 else 0
+        placed_success_rate = (satisfied_placed_orders / placed_predictions * 100) if placed_predictions > 0 else 0
+        placed_failure_rate = (failure_placed_orders / placed_predictions * 100) if placed_predictions > 0 else 0
+        not_happen_placed_orders_rate = (not_happen_placed_orders / placed_predictions * 100) if placed_predictions > 0 else 0
 
-        print(f"Statistiche di validazione per il simbolo \033[93m{symbol}\033[0m:\n")
-        print(f"Totale Previsioni: \033[94m{total_predictions}\033[0m")
+        print(f"\nStatistiche di validazione per il simbolo \033[93m{symbol}\033[0m:\n")
+        print(f"Totale Previsioni: \033[94m{total_predictions}\033\n[0m")
         print(f"Soddisfatte: \033[92m{successful_predictions} \033[92m({success_rate:.2f}%)\033[0m")
-        print(f"Ordini Piazzati: \033[93m{placed_predictions} \033[93m({placed_rate:.2f}%)\033[0m")
-        print(f"Insoddisfatte: \033[91m{failure_predictions} \033[91m({failure_rate:.2f}%)\033[0m\n")
+        print(f"Non Avvenute: \033[93m{not_happen_prediction} \033[93m({not_happen_rate:.2f}%)\033[0m")
+        print(f"Fallite: \033[91m{failure_predictions} \033[91m({failure_rate:.2f}%)\n\033[0m")
+        print(f"Ordini Piazzati: \033[94m{placed_predictions} \033[94m\n\033[0m")
+        print(f"Ordini Soddisfatti: \033[92m{satisfied_placed_orders} \033[92m({placed_success_rate:.2f}%)\033[0m")
+        print(f"Ordini Non Piazzati: \033[93m{not_happen_placed_orders} \033[93m({not_happen_placed_orders_rate:.2f}%)\033[0m")
+        print(f"Ordini Falliti: \033[91m{failure_placed_orders} \033[91m({placed_failure_rate:.2f}%)\n\033[0m")
 
         validation_stats = (
             f"Statistiche di validazione per {symbol}:\n"
             f"Totale Previsioni: {total_predictions}\n"
-            f"Piazzate: {placed_predictions} ({placed_predictions:.2f}%)\n"
             f"Soddisfatte: {successful_predictions} ({success_rate:.2f}%)\n"
-            f"Insoddisfatte: {failure_predictions} ({failure_rate:.2f}%)"
+            f"Non Avvenute: {not_happen_prediction} ({not_happen_rate:.2f}%)\n"
+            f"Fallite: {failure_predictions} ({failure_rate:.2f}%)"
+            f"Piazzate: {placed_predictions}\n"
+            f"Piazzate Soddisfatte: {satisfied_placed_orders} ({placed_success_rate:.2f}%)\n"
+            f"Non Piazzate: {not_happen_placed_orders} ({not_happen_placed_orders_rate:.2f}%)\n"
+            f"Piazzate Fallite: {failure_placed_orders} ({placed_failure_rate:.2f}%)\n"
         )
         
         sendNotify(validation_stats)

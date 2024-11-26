@@ -19,7 +19,7 @@ from utilities.utility import str_to_bool
 from utilities.telegram_sender import TelegramSender
 from utilities.forwarder_MT5 import TradingAPIClient
 from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
-from config import IP_SERVER_TRADING, PORT_SERVER_TRADING, BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES
+from config import IP_SERVER_TRADING, PORT_SERVER_TRADING, BOT_TOKEN, CHANNEL_TELEGRAM, PARAM_GRID, FAVORITE_RATE, N_PREDICTIONS, VALIDATION_THRESHOLD, INTERVAL_MINUTES, FORECAST_VALIDITY_MINUTES, TIME_MINUTE_EXPIRE_PLACED
 from utilities.calculator import get_profit, get_loss, get_dynamic_margin
 from utilities.plots import plot_forex_candlestick, plot_model_performance
 
@@ -340,10 +340,10 @@ def run_trading_model():
             take_profit = round(entry_price + dynamic_tp_margin, 5)
             stop_loss = round(entry_price - dynamic_sl_margin, 5)
 
-        logging.debug(f"DEBUG: Entry Price: {entry_price}")
-        logging.debug(f"DEBUG: Volatility: {volatility}, ATR: {atr}")
-        logging.debug(f"DEBUG: TP Margin: {dynamic_tp_margin}, SL Margin: {dynamic_sl_margin}")
-        logging.debug(f"DEBUG: Take Profit: {take_profit}, Stop Loss: {stop_loss}")
+        logging.debug(f"Entry Price: {entry_price}")
+        logging.debug(f"Volatility: {volatility}, ATR: {atr}")
+        logging.debug(f"TP Margin: {dynamic_tp_margin}, SL Margin: {dynamic_sl_margin}")
+        logging.debug(f"Take Profit: {take_profit}, Stop Loss: {stop_loss}")
 
         hypothetical_profit = get_profit(take_profit, entry_price, EXCHANGE_RATE)
         hypothetical_loss = get_loss(stop_loss, entry_price, EXCHANGE_RATE)
@@ -488,4 +488,9 @@ if __name__ == "__main__":
         EXCHANGE_RATE = rate_exchange
 
     if forex_market_status:
+        if SEND_SERVER_SIGNAL:
+            symbol_filter = SYMBOL+"#"
+            expired_orders = tradingClient.get_orders_palaced(symbol_filter, TIME_MINUTE_EXPIRE_PLACED)
+            for order in expired_orders:
+                tradingClient.delete_order(order["ticket"])
         run_trading_model()

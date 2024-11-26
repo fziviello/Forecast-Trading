@@ -1,7 +1,39 @@
 import logging
 import requests
 import json
+from datetime import datetime, timedelta, timezone
 
+def filter_old_orders(symbol=None, orders=None, max_minutes=60):
+    if orders is None:
+        logging.warning("Lista degli ordini vuota o non fornita.")
+        return []
+    
+    old_orders = []
+    current_time_utc = datetime.now(timezone.utc)
+    
+    for order in orders:
+        try:
+            logging.info(f"Analizzando ordine con simbolo {order.get('symbol')} e time_setup {order.get('time_setup')}")
+            
+            if symbol and order.get("symbol") != symbol:
+                logging.info(f"Ordine ignorato, simbolo non corrisponde. Simbolo richiesto: {symbol}, simbolo ordine: {order.get('symbol')}")
+                continue
+            
+            order_time = datetime.fromtimestamp(order["time_setup"], tz=timezone.utc)
+            time_difference = current_time_utc - order_time
+            logging.info(f"Tempo trascorso dall'ordine: {time_difference}")
+            
+            if time_difference < timedelta(minutes=max_minutes):
+                old_orders.append(order)
+                logging.info(f"Ordine aggiunto alla lista: {order}")
+        
+        except KeyError as e:
+            logging.warning(f"Ordine con chiave mancante: {e}")
+        except Exception as e:
+            logging.error(f"Errore generico durante il filtraggio degli ordini: {e}")
+    
+    return old_orders
+    
 class TradingAPIClient:
     def __init__(self, server_url):
         self.server_url = server_url
@@ -22,7 +54,7 @@ class TradingAPIClient:
             print(f"\033[91mErrore nella conversione dei parametri in float: {str(e)}\033[0m")
             logging.error(f"Errore nella conversione dei parametri in float: {str(e)}")
             return
-    
+
         data = {
             "symbol": symbol,
             "type": order_type,
@@ -127,3 +159,31 @@ class TradingAPIClient:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
             logging.error(f"Errore durante la richiesta al server: {str(e)}")      
             return "Server Request Error"
+        
+    def get_orders_palaced(self, symbol=None, max_minutes=60):
+        url = f"{self.server_url}/order/placed"
+        headers = {"Content-Type": "application/json"}
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            data = response.json()
+            if response.status_code == 200:
+                orders = filter_old_orders(symbol, data.get("orders", []), max_minutes)
+                return orders
+            else:
+                error_message = data["message"]
+                print(f"\033[91mErrore nella ricezione degli ordini attivi: {error_message}\033[0m")
+                logging.error(f"Errore nella ricezione degli ordini attivi: {response.status_code}, {response.text}")
+                error_detail = error_message.split(":", 1)[1].strip()
+                return error_detail
+        
+        except requests.exceptions.Timeout:
+            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
+            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            return "Timeout Server Error"
+        
+        except requests.exceptions.RequestException as e:
+            print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
+            logging.error(f"Errore durante la richiesta al server: {str(e)}")      
+            return "Server Request Error"
+        

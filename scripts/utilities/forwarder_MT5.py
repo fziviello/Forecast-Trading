@@ -2,30 +2,33 @@ import logging
 import requests
 import json
 from datetime import datetime, timedelta, timezone
+import pytz
 
-def filter_old_orders(symbol=None, orders=None, max_minutes=60):
+def filter_expired_orders(symbol=None, orders=None, max_minutes=60):
     if orders is None:
         logging.warning("Lista degli ordini vuota o non fornita.")
         return []
     
     old_orders = []
-    current_time_utc = datetime.now(timezone.utc)
+    italy_timezone = pytz.timezone('Europe/Rome')
+    current_time_italy = datetime.now(italy_timezone)
     
     for order in orders:
         try:
-            logging.info(f"Analizzando ordine con simbolo {order.get('symbol')} e time_setup {order.get('time_setup')}")
+            logging.debug(f"Analizzando ordine con simbolo {order.get('symbol')} e time_setup {order.get('time_setup')}")
             
             if symbol and order.get("symbol") != symbol:
-                logging.info(f"Ordine ignorato, simbolo non corrisponde. Simbolo richiesto: {symbol}, simbolo ordine: {order.get('symbol')}")
+                logging.debug(f"Ordine ignorato, simbolo non corrisponde. Simbolo richiesto: {symbol}, simbolo ordine: {order.get('symbol')}")
                 continue
             
-            order_time = datetime.fromtimestamp(order["time_setup"], tz=timezone.utc)
-            time_difference = current_time_utc - order_time
-            logging.info(f"Tempo trascorso dall'ordine: {time_difference}")
-            
+            server_timezone = pytz.timezone('Etc/GMT+1')
+            order_time = datetime.fromtimestamp(order["time_setup"], tz=server_timezone)
+            time_difference = current_time_italy - order_time
+            logging.debug(f"Tempo trascorso dall'ordine: {time_difference}")
+
             if time_difference < timedelta(minutes=max_minutes):
                 old_orders.append(order)
-                logging.info(f"Ordine aggiunto alla lista: {order}")
+                logging.debug(f"Ordine aggiunto alla lista: {order}")
         
         except KeyError as e:
             logging.warning(f"Ordine con chiave mancante: {e}")
@@ -71,7 +74,7 @@ class TradingAPIClient:
             data = response.json()
             if response.status_code == 200:
                 order_id = data["order_id"]
-                print(f"\033[92mOrdine piazzato con successo {order_id}\033[0m")
+                print(f"\033[92mOrdine {order_id} piazzato con successo\033[0m")
                 logging.info(f"Ordine piazzato con successo: {data}")
                 return order_id
                 
@@ -105,11 +108,11 @@ class TradingAPIClient:
         data = {k: v for k, v in data.items() if v is not None}
 
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
+            response = requests.put(url, headers=headers, data=json.dumps(data), timeout=10)
             data = response.json()
             if response.status_code == 200:
                 order_id = data["order_id"]
-                print(f"\033[92mOrdine aggioranto: {order_id}\033[0m")
+                print(f"\033[92mOrdine {order_id} aggioranto:\033[0m")
                 logging.info(f"Ordine aggiornato: {response.json()}")
                 return order_id
             else:
@@ -137,16 +140,15 @@ class TradingAPIClient:
         }
 
         try:
-            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
+            response = requests.delete(url, headers=headers, data=json.dumps(data), timeout=10)
             data = response.json()
             if response.status_code == 200:
-                order_id = data["order_id"]
-                print(f"\033[92mOrdine eliminato con successo {order_id}\033[0m")
+                print(f"\033[92mOrdine {ticket} eliminato con successo\033[0m")
                 logging.info(f"Ordine eliminato con successo: {response.json()}")
-                return order_id
+                return ticket
             else:
                 error_message = data["message"]
-                print(f"\033[91mOrdine non eliminato: {error_message}\033[0m")
+                print(f"\033[91mOrdine {ticket} non eliminato: {error_message}\033[0m")
                 logging.error(f"Errore nella cancellazione dell'ordine: {response.status_code}, {response.text}")
                 error_detail = error_message.split(":", 1)[1].strip()
                 return error_detail
@@ -168,7 +170,7 @@ class TradingAPIClient:
             response = requests.get(url, headers=headers, timeout=10)
             data = response.json()
             if response.status_code == 200:
-                orders = filter_old_orders(symbol, data.get("orders", []), max_minutes)
+                orders = filter_expired_orders(symbol, data.get("orders", []), max_minutes)
                 return orders
             else:
                 error_message = data["message"]

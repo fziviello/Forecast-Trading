@@ -369,19 +369,25 @@ def run_trading_model():
         })
 
     results = sorted(results, key=lambda x: float(x['Prezzo']))
-    printed_results = set()
     
+    #rimuovo duplicati
+    seen_prices = set()
+    unique_results = []
+    for result in results:
+        prezzo = float(result['Prezzo'])
+        if prezzo not in seen_prices:
+            seen_prices.add(prezzo)
+            unique_results.append(result)
+        
     print("\nPrevisioni Generate:\n")
     row_index = 1
     details_notify_list = []
-    for result in results:
-        result_key = (result['Tipo'], result['Prezzo'])
-        if result_key in printed_results:
-            continue
-        printed_results.add(result_key)
-        
+    for result in unique_results:
         if SEND_SERVER_SIGNAL:
-            result['Ticket'] = tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+             if is_forecast_still_valid(result, FORECAST_VALIDITY_MINUTES):
+                result['Ticket'] = tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+             else:
+                result['Ticket'] = "Non Piazzata Ancora Valida"  
         else:
             result['Ticket'] = "Non Piazzata"
                         
@@ -417,7 +423,7 @@ def run_trading_model():
 
     print("\n")
         
-    results_df = pd.DataFrame(results)
+    results_df = pd.DataFrame(unique_results)
     results_df = results_df[['Ticket','Data Previsione', 'Tipo', 'Prezzo', 'Stop Loss', 'Take Profit', 'Guadagno', 'Perdita']]
     
     if is_forecast_still_valid(results_df, FORECAST_VALIDITY_MINUTES):

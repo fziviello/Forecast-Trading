@@ -5,14 +5,21 @@ import logging
 import time
 import argparse
 from datetime import datetime
-from utilities.utility import str_to_bool
+from utilities.utility import str_to_bool, get_system_type
 from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
 from config import TIME_MINUTE_REPEAT, N_REPEAT
 
 SEND_TELEGRAM = False
 SEND_SERVER_SIGNAL = False
+PYTHON_PATH = "python"
 
 setup_folders()
+
+my_system = get_system_type()
+
+if my_system == "Windows":
+    venv_path = r".venv\Scripts\python.exe"
+    PYTHON_PATH = os.path.normpath(os.path.join(venv_path, ".."))
 
 logging.basicConfig(
     filename=os.path.join(LOGS_FOLDER, LOG_TRAINING_FILE_PATH),
@@ -25,7 +32,7 @@ def run_scripts_for_symbol(symbol):
     
     print(f"\033[93m*** Avvio Creazione del DataSet per {symbol}\033[0m\n")
     process1 = subprocess.Popen(
-        ["python", "create_dataSet.py", "--symbol", symbol],
+        [PYTHON_PATH, "create_dataSet.py", "--symbol", symbol],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
@@ -44,7 +51,7 @@ def run_scripts_for_symbol(symbol):
     process1.wait()
 
     print(f"\n\033[93m*** Avvio Forecast per {symbol}\033[0m\n")
-    command = ["python", "forecast_bot.py", "--symbol", symbol]
+    command = [PYTHON_PATH, "forecast_bot.py", "--symbol", symbol]
     command.extend(["--notify", str(SEND_TELEGRAM).lower()])
     command.extend(["--sendSignal", str(SEND_SERVER_SIGNAL).lower()])
 
@@ -112,7 +119,7 @@ if __name__ == "__main__":
     
     #avvio statistiche
     print(f"\033[93m*** Genero le Statistiche dei Training\033[0m\n")
-    command = ["python", "get_statistics.py", "--ALL"]
+    command = [PYTHON_PATH, "get_statistics.py", "--ALL"]
     command.extend(["--notify", str(SEND_TELEGRAM).lower()])
 
     process3 = subprocess.Popen(

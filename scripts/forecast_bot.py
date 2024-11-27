@@ -15,7 +15,7 @@ import logging
 import argparse
 import itertools
 import time
-from utilities.utility import str_to_bool
+from utilities.utility import str_to_bool, colorize_amount
 from utilities.telegram_sender import TelegramSender
 from utilities.forwarder_MT5 import TradingAPIClient
 from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
@@ -31,6 +31,7 @@ OVERWRITE_FORECAST_CSV = False
 REPEAT_TRAINING = False
 
 SYMBOL = None
+SYMBOL_FILTER = None
 BEST_ACCURACY = None
 BEST_PARAMS = None
 BEST_MODEL = None
@@ -46,6 +47,11 @@ logging.basicConfig(
 
 urlServer = "http://" + IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING
 tradingClient = TradingAPIClient(urlServer)
+
+def brokerRoule(broker_company):
+    if broker_company == "Trading Point Of Financial Instruments Ltd":
+        return "#"
+    return ""
 
 def sendNotify(msg):
     if SEND_TELEGRAM is True:
@@ -283,7 +289,7 @@ def validate_predictions():
         REPEAT_TRAINING = failure_rate > VALIDATION_THRESHOLD
 
 def run_trading_model():
-    global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, GENERATE_PLOT, REPEAT_TRAINING, INTERVAL_MINUTES
+    global SYMBOL, SYMBOL_FILTER, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, GENERATE_PLOT, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 
@@ -385,7 +391,7 @@ def run_trading_model():
     for result in unique_results:
         if SEND_SERVER_SIGNAL:
              if is_forecast_still_valid(result, FORECAST_VALIDITY_MINUTES):
-                result['Ticket'] = tradingClient.create_order(SYMBOL,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
+                result['Ticket'] = tradingClient.create_order(SYMBOL_FILTER,result['Tipo'], 0.01, result['Prezzo'], result['Stop Loss'], result['Take Profit'])
              else:
                 result['Ticket'] = "Non Piazzata Ancora Valida"  
         else:
@@ -489,8 +495,25 @@ if __name__ == "__main__":
 
     if forex_market_status:
         if SEND_SERVER_SIGNAL:
-            symbol_filter = SYMBOL+"#"
-            expired_orders = tradingClient.get_orders_palaced(symbol_filter, TIME_MINUTE_EXPIRE_PLACED)
+            info_account = tradingClient.get_account_info()
+            broker_company = info_account["info"]["company"]
+            broker_type = info_account["info"]["name"]
+            broker_balance = str(round(info_account["info"]["balance"], 2))  + "€"
+            broker_profit = str(round(info_account["info"]["profit"], 2)) + "€"
+            broker_margin = str(round(info_account["info"]["margin"], 2)) + "€"
+            broker_margin_free = str(round(info_account["info"]["margin_free"], 2)) + "€"
+            broker_margin_level = str(round(info_account["info"]["margin_level"], 2)) + "%"
+            
+            print(f"\033[93m{broker_company}: {broker_type}\033[0m")
+            print(f"Bilancio: {colorize_amount(broker_balance)}")
+            print(f"Profitto: {colorize_amount(broker_profit)}")
+            print(f"Margine: {colorize_amount(broker_margin)}")
+            print(f"Margine libero: {colorize_amount(broker_margin_free)}")
+            print(f"Livello di margine: {colorize_amount(broker_margin_level)}\n")
+            
+            SYMBOL_FILTER = SYMBOL + brokerRoule(broker_company)
+            expired_orders = tradingClient.get_orders_palaced(SYMBOL_FILTER, TIME_MINUTE_EXPIRE_PLACED)
+            
             for order in expired_orders:
                 tradingClient.delete_order(order["ticket"])
         run_trading_model()

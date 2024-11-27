@@ -50,9 +50,7 @@ class TradingAPIClient:
         headers = {"Content-Type": "application/json"}
         
         order_type = (order_type.replace(" ", "_")).lower()
-        
-        symbol = symbol+"#"
-                
+                        
         try:
             price = round(float(price), 3) if price is not None else None
             stop_loss = round(float(stop_loss), 3) if stop_loss is not None else None
@@ -90,8 +88,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
-            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            print(f"\033[91mfilter_expired_orders\033[0m")
+            logging.error(f"filter_expired_orders")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -127,8 +125,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
-            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            print(f"\033[91mfilter_expired_orders\033[0m")
+            logging.error(f"filter_expired_orders")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -158,8 +156,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
-            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            print(f"\033[91mfilter_expired_orders\033[0m")
+            logging.error(f"filter_expired_orders")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -184,12 +182,38 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mTimeout: Il server non ha risposto entro il tempo limite.\033[0m")
-            logging.error(f"Timeout: Il server non ha risposto entro il tempo limite.")     
+            print(f"\033[91mfilter_expired_orders\033[0m")
+            logging.error(f"filter_expired_orders")     
             return "Timeout Server Error"
         
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
             logging.error(f"Errore durante la richiesta al server: {str(e)}")      
             return "Server Request Error"
-        
+
+    def get_account_info(self):
+            url = f"{self.server_url}/account/info"
+            headers = {"Content-Type": "application/json"}
+            
+            try:
+                response = requests.get(url, headers=headers, timeout=10)
+                data = response.json()
+                if response.status_code == 200:
+                    logging.info(f"Info Account: {response.json()}")
+                    return data
+                else:
+                    error_message = data["message"]
+                    print(f"\033[91mErrore nella ricezione delle informazioni dell' account: {error_message}\033[0m")
+                    logging.error(f"Errore nella ricezione delle informazioni dell' account: {response.status_code}, {response.text}")
+                    error_detail = error_message.split(":", 1)[1].strip()
+                    return error_detail
+            
+            except requests.exceptions.Timeout:
+                print(f"\033[91mfilter_expired_orders\033[0m")
+                logging.error(f"filter_expired_orders")     
+                return "Timeout Server Error"
+            
+            except requests.exceptions.RequestException as e:
+                print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
+                logging.error(f"Errore durante la richiesta al server: {str(e)}")      
+                return "Server Request Error"

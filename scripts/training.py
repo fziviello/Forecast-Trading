@@ -36,7 +36,8 @@ def run_scripts_for_symbol(symbol):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
-        text=True
+        text=True,
+        encoding='utf-8'
     )
 
     if process1.stdout:
@@ -60,7 +61,8 @@ def run_scripts_for_symbol(symbol):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
-        text=True
+        text=True,
+        encoding='utf-8'
     )
 
     if process2.stdout:
@@ -127,7 +129,8 @@ if __name__ == "__main__":
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
-        text=True
+        text=True,
+        encoding='utf-8'
     )
 
     if process3.stdout:

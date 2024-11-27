@@ -18,8 +18,7 @@ setup_folders()
 my_system = get_system_type()
 
 if my_system == "Windows":
-    venv_path = r".venv\Scripts\python.exe"
-    PYTHON_PATH = os.path.normpath(os.path.join(venv_path, ".."))
+    PYTHON_PATH = r".venv\Scripts\python.exe"
 
 logging.basicConfig(
     filename=os.path.join(LOGS_FOLDER, LOG_TRAINING_FILE_PATH),

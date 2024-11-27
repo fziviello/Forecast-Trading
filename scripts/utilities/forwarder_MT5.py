@@ -14,7 +14,7 @@ def filter_expired_orders(symbol=None, orders=None, max_minutes=60):
     italy_timezone = pytz.timezone('Europe/Rome')
     current_time_italy = datetime.now(italy_timezone)
     current_time_naive = current_time_italy.replace(tzinfo=None)
-
+    
     for order in orders:
         try:
             logging.debug(f"Analizzando ordine con simbolo {order.get('symbol')} e time_setup {order.get('time_setup')}")
@@ -23,13 +23,13 @@ def filter_expired_orders(symbol=None, orders=None, max_minutes=60):
                 logging.debug(f"Ordine ignorato, simbolo non corrisponde. Simbolo richiesto: {symbol}, simbolo ordine: {order.get('symbol')}")
                 continue
             
-            order_time = datetime.fromtimestamp(order["time_setup"], tz=server_timezone)
+            order_time = datetime.fromtimestamp(order.get('time_setup'), tz=server_timezone)
             order_time_naive = order_time.replace(tzinfo=None)
             
             time_difference = current_time_naive - order_time_naive
-            minutes_difference = ((time_difference.total_seconds() % 3600) // 60)
+            minutes_difference = (time_difference.total_seconds() % 3600) // 60
             logging.info(f"Tempo trascorso dall'ordine: {minutes_difference}")
-            
+           
             if minutes_difference >= max_minutes:
                 old_orders.append(order)
                 logging.debug(f"Ordine aggiunto alla lista: {order}")

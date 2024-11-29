@@ -1,7 +1,7 @@
 import logging
 import requests
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 import pytz
 
 def filter_expired_orders(symbol=None, orders=None, max_minutes=60):

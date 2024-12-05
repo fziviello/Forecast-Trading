@@ -154,7 +154,7 @@ if you have problems installing ta-lib proceed as follows
 
 if you use windows:
 - Download ta-lib precompiled `https://sourceforge.net/projects/talib-whl` and move into venv dir
-- Run `pip install ta-lib`
+- Run `pip install path\to\ta_lib‑0.4.0‑cp310‑cp310‑win_amd64.whl`
 
 
 To use the `SEND_SERVER_SIGNAL` functionality you can use APIM MT5 

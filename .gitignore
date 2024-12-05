@@ -19,6 +19,7 @@ results
 *.h5
 *.pkl
 *.env
+*.whl
 
 # Ignora file di sistema di macOS
 .DS_Store

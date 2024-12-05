@@ -17,7 +17,7 @@ You can change them in the config.py file
 
 ## Run
 
-- Start Training : `python3 scripts/training.py --symbol AUDJPY,AUDNZD,AUDCHF --notify True --sendSignal True`
+- Start Training : `python3 scripts/training.py --symbol AUDJPY,AUDNZD,AUDCHF,SGDJPY,AUDCAD --notify True --sendSignal True`
 
 # DataSet Generator
 

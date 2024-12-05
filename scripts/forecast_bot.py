@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import yfinance as yf
+from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential, load_model # type: ignore
 from tensorflow.keras.layers import Input, LSTM, Dense, Dropout # type: ignore
@@ -9,13 +10,13 @@ from tensorflow.keras.optimizers import Adam, RMSprop # type: ignore
 import talib
 import joblib
 import os
-from datetime import datetime, timedelta
 import pytz
 import logging
 import argparse
 import itertools
 import time
 from utilities.utility import str_to_bool, colorize_amount
+from utilities.forex_utils import brokerRoule, forex_market_status, exchange_currency, ForexTradingEnv, train_rl_model
 from utilities.telegram_sender import TelegramSender
 from utilities.forwarder_MT5 import TradingAPIClient
 from utilities.folder_config import setup_folders, MODELS_FOLDER, DATA_FOLDER, RESULTS_FOLDER, PLOTS_FOLDER, LOGS_FOLDER, LOG_FORECAST_FILE_PATH
@@ -48,38 +49,11 @@ logging.basicConfig(
 urlServer = "http://" + IP_SERVER_TRADING + ":" + PORT_SERVER_TRADING
 tradingClient = TradingAPIClient(urlServer)
 
-def brokerRoule(broker_company):
-    if broker_company == "Trading Point Of Financial Instruments Ltd":
-        return "#"
-    return ""
-
 def sendNotify(msg):
     if SEND_TELEGRAM is True:
         telegramSender = TelegramSender(BOT_TOKEN)
         telegramSender.sendMsg(msg, CHANNEL_TELEGRAM)
-        
-def forex_market_status(symbol: str) -> bool:
-    forex_open = time(22, 0)  # 22:00 UTC
-    forex_close = time(22, 0)  # 22:00 UTC (venerdì)
-    
-    now_utc = datetime.now(pytz.utc)
-    current_time = now_utc.time()
-    current_weekday = now_utc.weekday()  # 0 = lunedì, 6 = domenica
-    
-    if current_weekday == 6 or (current_weekday == 5 and current_time >= forex_close):
-        print("Il mercato è chiuso")
-        print(f"\033[91mIl mercato è chiuso {symbol}\033[0m")
-        logging.info(f"Il mercato è chiuso\n")
-        return False
-    elif current_weekday == 0 and current_time < forex_open:
-        print(f"\033[91mIl mercato è chiuso {symbol}\033[0m")
-        logging.info(f"Il mercato è chiuso\n")
-        return False
-    else:
-        print(f"\033[92mIl mercato è aperto {symbol}\033[0m")
-        logging.info(f"Il mercato è aperto\n")
-        return True
-    
+            
 def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
     global FORECAST_RESULTS_PATH
     try:
@@ -107,20 +81,6 @@ def is_forecast_still_valid(details_notify_list, time_life_minutes=60):
         logging.error(f"Errore durante la verifica della notifica: {e}")
         print(f"\033[91m'Errore durante la verifica della notifica: {e}'\033[0m")
         return False
-
-def exchange_currency(base, target):
-    ticker = f"{base}{target}=X"
-    try:
-        data = yf.Ticker(ticker)
-        exchange_rate = (data.history(period="1d")['Close'].iloc[-1])
-        exchange_rate = round(exchange_rate, 5)
-        print(f"\033[94m\nIl tasso di cambio da {base} a {target} è: \033[92m{exchange_rate}€\033[0m\n")
-        logging.info(f"Il tasso di cambio da {base} a {target} è: {exchange_rate}")
-        return exchange_rate
-    except Exception as e:
-        print(f"\033[91m'Errore nel recuperare il tasso di cambio, verrà utilizzato il suo valore di default'\033[0m")
-        logging.error(f"Errore nel recuperare il tasso di cambio: {e}")
-        return None
 
 def create_model(X_train, y_train, X_test, y_test, units, dropout, epochs, batch_size, learning_rate, optimizer_name):
     global SYMBOL, BEST_ACCURACY, BEST_PARAMS, BEST_MODEL, ACCURACY_LIST    
@@ -292,6 +252,9 @@ def run_trading_model():
     global SYMBOL, SYMBOL_FILTER, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, LOG_FILE_PATH, PLOT_FILE_PATH, GENERATE_PLOT, REPEAT_TRAINING, INTERVAL_MINUTES
     validate_predictions()
     df = load_and_preprocess_data()
+    
+    rl_model = train_rl_model(df)
+    
     X = df[['Open', 'High', 'Low', 'Close', 'MA20', 'MA50', 'Volatility', 
         'RSI', 'MACD', 'Upper Bollinger', 'Lower Bollinger', 'ATR',
         'SAR', 'Stochastic Oscillator', 'ADX', 'Upper Envelope', 'Lower Envelope']].values
@@ -303,9 +266,9 @@ def run_trading_model():
         scaler = MinMaxScaler()
         scaler.fit(X)
         joblib.dump(scaler, SCALER_PATH)
-    X_scaled = scaler.transform(X)
-
+        
     time_steps = 20
+    X_scaled = scaler.transform(X)
     X_seq, y_seq = create_sequences(X_scaled, y.values, time_steps)
     X_train, X_test = X_seq[:-N_PREDICTIONS], X_seq[-N_PREDICTIONS:]
     y_train, y_test = y_seq[:-N_PREDICTIONS], y_seq[-N_PREDICTIONS:]
@@ -321,15 +284,27 @@ def run_trading_model():
        
     predictions = (model.predict(X_test) > 0.5).astype(int)
 
+    #Decisioni dinamiche con RL
+    env = ForexTradingEnv(df)
+    obs = env.reset()
+    
     results = []
     for i, pred in enumerate(predictions.flatten()):
+        action, pred = rl_model.predict(obs)
+        obs, reward, done, info = env.step(action)
+        logging.debug(f"obs: {obs}, reward: {reward}, done: {done}, info: {info}")
+
+        if done:
+            break
+
         entry_price = round(df['Close'].iloc[-N_PREDICTIONS + i], 3)
-        order_type = "Buy" if pred == 1 else "Sell"
-        order_class = "Limit" if pred == 1 else "Stop"
-  
+
+        order_type = "Buy" if action == 1 else "Sell"
+        order_class = "Limit" if action == 1 else "Stop"
+
         volatility = df['Volatility'].iloc[-1]
         atr = df['ATR'].iloc[-1]
-        
+
         dynamic_tp_margin, dynamic_sl_margin = get_dynamic_margin(
             entry_price=entry_price,
             volatility=volatility,
@@ -354,7 +329,7 @@ def run_trading_model():
         hypothetical_profit = get_profit(take_profit, entry_price, EXCHANGE_RATE)
         hypothetical_loss = get_loss(stop_loss, entry_price, EXCHANGE_RATE)
 
-        # Allineo tutte le date a UTC come il dataset
+        # Allineamento della data a UTC come nel dataset
         data_obj = datetime.now()
         italy_tz = pytz.timezone('Europe/Rome')
         utc_tz = pytz.UTC

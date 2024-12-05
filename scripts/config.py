@@ -3,8 +3,8 @@ import os
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', 'secret.env'))
 
-MAX_MARGIN = 0.03 # 3% del prezzo
-MIN_MARGIN = 0.007 # 0.7% del prezzo
+MAX_MARGIN = 0.02 # 2% del prezzo
+MIN_MARGIN = 0.004 # 0.4% del prezzo
 LOT_SIZE = 0.01
 CONTRACT_SIZE = 100_000
 EXCHANGE_RATE = 0.1
@@ -15,8 +15,8 @@ INTERVAL_MINUTES = 10
 RETRY_LIMIT = 3
 INTERVAL_DATASET = '2m'
 FORECAST_VALIDITY_MINUTES = 30
-TIME_MINUTE_EXPIRE_PLACED = 60
-TIME_MINUTE_REPEAT = 5
+TIME_MINUTE_EXPIRE_PLACED = 30
+TIME_MINUTE_REPEAT = 30
 N_REPEAT = 60
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_TELEGRAM = os.getenv("CHANNEL_TELEGRAM")

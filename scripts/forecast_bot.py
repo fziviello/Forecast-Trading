@@ -468,7 +468,8 @@ if __name__ == "__main__":
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
 
-    if forex_market_status:
+    print(tradingClient.get_account_info())
+    if forex_market_status(SYMBOL):
         if SEND_SERVER_SIGNAL:
             info_account = tradingClient.get_account_info()
             broker_company = info_account["info"]["company"]

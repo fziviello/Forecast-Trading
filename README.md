@@ -70,6 +70,7 @@ Use the dataset created with the script `create_dataSet`
 
 ## Customizable Parameters
 
+- `USE_SERVER_MT5`: If True required MT5 server ON
 - `GENERATE_PLOT`: If True Make the plot
 - `SHOW_PLOT`: If True Show the plot
 
@@ -106,6 +107,7 @@ For env management you can create the `secret.env` file in the project root wher
 ## Args Parameters
 
 - `SYMBOL`: The Name of Stock Exchange Symbol (--symbol) *REQUIRED
+- `GYM`: If True bypass check status market
 - `SEND_SERVER_SIGNAL`: If True send signal to MT5 Server
 - `NOTIFY`: If True send the predictions to Telegram Channel
 - `FAVORITE_RATE`: Favorite conversion rate (--favoriteRate) (default EUR)

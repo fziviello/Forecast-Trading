@@ -24,6 +24,8 @@ from config import IP_SERVER_TRADING, PORT_SERVER_TRADING, BOT_TOKEN, CHANNEL_TE
 from utilities.calculator import get_profit, get_loss, get_dynamic_margin
 from utilities.plots import plot_forex_candlestick, plot_model_performance
 
+USE_SERVER_MT5 = True
+IS_GYM = False
 GENERATE_PLOT = False
 SEND_TELEGRAM = False
 SEND_SERVER_SIGNAL = False
@@ -427,6 +429,7 @@ def run_trading_model():
 if __name__ == "__main__":
         
     parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
+    parser.add_argument("--gym", type=str, required=False, help="Forza un allenamento del modello se il mercato è chiuso")
     parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
     parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
@@ -436,6 +439,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     SYMBOL = (args.symbol).upper()
     
+    if args.gym is not None :
+        IS_GYM = str_to_bool(args.gym)
+        
     if args.sendSignal is not None :
         SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
         
@@ -469,27 +475,28 @@ if __name__ == "__main__":
         EXCHANGE_RATE = rate_exchange
 
     print(tradingClient.get_account_info())
-    if forex_market_status(SYMBOL):
+    if forex_market_status(SYMBOL) or IS_GYM:
         if SEND_SERVER_SIGNAL:
-            info_account = tradingClient.get_account_info()
-            broker_company = info_account["info"]["company"]
-            broker_type = info_account["info"]["name"]
-            broker_balance = str(round(info_account["info"]["balance"], 2))  + "€"
-            broker_profit = str(round(info_account["info"]["profit"], 2)) + "€"
-            broker_margin = str(round(info_account["info"]["margin"], 2)) + "€"
-            broker_margin_free = str(round(info_account["info"]["margin_free"], 2)) + "€"
-            broker_margin_level = str(round(info_account["info"]["margin_level"], 2)) + "%"
-            
-            print(f"\033[93m{broker_company}: {broker_type}\033[0m")
-            print(f"Bilancio: {colorize_amount(broker_balance)}")
-            print(f"Profitto: {colorize_amount(broker_profit)}")
-            print(f"Margine: {colorize_amount(broker_margin)}")
-            print(f"Margine libero: {colorize_amount(broker_margin_free)}")
-            print(f"Livello di margine: {colorize_amount(broker_margin_level)}\n")
-            
-            SYMBOL_FILTER = SYMBOL + brokerRoule(broker_company)
-            expired_orders = tradingClient.get_orders_palaced(SYMBOL_FILTER, TIME_MINUTE_EXPIRE_PLACED)
-            
-            for order in expired_orders:
-                tradingClient.delete_order(order["ticket"])
+            if USE_SERVER_MT5:
+                info_account = tradingClient.get_account_info()
+                broker_company = info_account["info"]["company"]
+                broker_type = info_account["info"]["name"]
+                broker_balance = str(round(info_account["info"]["balance"], 2))  + "€"
+                broker_profit = str(round(info_account["info"]["profit"], 2)) + "€"
+                broker_margin = str(round(info_account["info"]["margin"], 2)) + "€"
+                broker_margin_free = str(round(info_account["info"]["margin_free"], 2)) + "€"
+                broker_margin_level = str(round(info_account["info"]["margin_level"], 2)) + "%"
+                
+                print(f"\033[93m{broker_company}: {broker_type}\033[0m")
+                print(f"Bilancio: {colorize_amount(broker_balance)}")
+                print(f"Profitto: {colorize_amount(broker_profit)}")
+                print(f"Margine: {colorize_amount(broker_margin)}")
+                print(f"Margine libero: {colorize_amount(broker_margin_free)}")
+                print(f"Livello di margine: {colorize_amount(broker_margin_level)}\n")
+                
+                SYMBOL_FILTER = SYMBOL + brokerRoule(broker_company)
+                expired_orders = tradingClient.get_orders_palaced(SYMBOL_FILTER, TIME_MINUTE_EXPIRE_PLACED)
+                
+                for order in expired_orders:
+                    tradingClient.delete_order(order["ticket"])
         run_trading_model()

@@ -15,7 +15,7 @@ import logging
 import argparse
 import itertools
 import time
-from utilities.utility import str_to_bool, colorize_amount
+from utilities.utility import str_to_bool, colorize_amount, get_all_exist_models
 from utilities.forex_utils import brokerRoule, forex_market_status, exchange_currency, ForexTradingEnv, train_rl_model
 from utilities.telegram_sender import TelegramSender
 from utilities.forwarder_MT5 import TradingAPIClient
@@ -426,39 +426,9 @@ def run_trading_model():
     if GENERATE_PLOT is True:
         plot_forex_candlestick(df, predictions, PLOT_FILE_PATH, SHOW_PLOT)
 
-if __name__ == "__main__":
-        
-    parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
-    parser.add_argument("--gym", type=str, required=False, help="Forza un allenamento del modello se il mercato è chiuso")
-    parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
-    parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
-    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
-    parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
-    parser.add_argument("--favoriteRate", type=str, required=False, help="Inserire il rate di conversione")
-    parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
-    args = parser.parse_args()
-    SYMBOL = (args.symbol).upper()
-    
-    if args.gym is not None :
-        IS_GYM = str_to_bool(args.gym)
-        
-    if args.sendSignal is not None :
-        SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
-        
-    if args.notify is not None :
-        SEND_TELEGRAM = str_to_bool(args.notify)
-        
-    if args.interval is not None :
-        FAVORITE_RATE = args.favoriteRate
-    
-    if args.interval is not None :
-        INTERVAL_MINUTES = args.interval
-        
-    if args.plot is not None:
-        GENERATE_PLOT = str_to_bool(args.plot)
-            
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
+
+def startForecast():
+    global SYMBOL, MODEL_PATH, SCALER_PATH, FORECAST_RESULTS_PATH, VALIDATION_RESULTS_PATH, PLOT_FILE_PATH, PLOT_MODEL_FILE_PATH, DATASET_PATH, BASE_CURRENCY, EXCHANGE_RATE
     MODEL_PATH = os.path.join(MODELS_FOLDER, f"lstm_trading_model_{SYMBOL}.h5")
     SCALER_PATH = os.path.join(MODELS_FOLDER, f"scaler_{SYMBOL}.pkl")
     FORECAST_RESULTS_PATH = os.path.join(RESULTS_FOLDER, f"forecast_trading_{SYMBOL}.csv")
@@ -500,3 +470,44 @@ if __name__ == "__main__":
                 for order in expired_orders:
                     tradingClient.delete_order(order["ticket"])
         run_trading_model()
+    
+if __name__ == "__main__":
+        
+    parser = argparse.ArgumentParser(description="Inserire il symbol da esaminare")
+    parser.add_argument("--gym", type=str, required=False, help="Forza un allenamento del modello se il mercato è chiuso")
+    parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
+    parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
+    parser.add_argument("--plot", type=str, required=False, help="Generare il grafico")
+    parser.add_argument("--interval", type=str, required=False, help="Inserire l'intervallo temporale in minuti")
+    parser.add_argument("--favoriteRate", type=str, required=False, help="Inserire il rate di conversione")
+    parser.add_argument("--symbol", type=str, required=True, help="Inserire il symbol per avviare il bot")
+    args = parser.parse_args()
+    SYMBOL = (args.symbol).upper()
+    
+    if args.gym is not None :
+        IS_GYM = str_to_bool(args.gym)
+        
+    if args.sendSignal is not None :
+        SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
+        
+    if args.notify is not None :
+        SEND_TELEGRAM = str_to_bool(args.notify)
+        
+    if args.interval is not None :
+        FAVORITE_RATE = args.favoriteRate
+    
+    if args.interval is not None :
+        INTERVAL_MINUTES = args.interval
+        
+    if args.plot is not None:
+        GENERATE_PLOT = str_to_bool(args.plot)
+            
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    if SYMBOL == "ALL":
+        list_symbol = get_all_exist_models(MODELS_FOLDER)
+        for symbolName in list_symbol:
+            SYMBOL = symbolName
+            startForecast()
+    else:    
+       startForecast()

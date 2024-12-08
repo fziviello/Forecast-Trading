@@ -26,18 +26,21 @@ def brokerRoule(broker_company):
     return ""
 
 def forex_market_status(symbol: str) -> bool:
-    forex_open = time(22, 0)  # 22:00 UTC
+    # Orari di apertura e chiusura in UTC
+    forex_open = time(22, 0)  # 22:00 UTC (domenica)
     forex_close = time(22, 0)  # 22:00 UTC (venerdì)
     
     now_utc = datetime.now(pytz.timezone('Europe/Rome'))
     current_time = now_utc.time()
     current_weekday = now_utc.weekday()  # 0 = lunedì, 6 = domenica
     
-    if current_weekday == 6 or (current_weekday == 5 and current_time >= forex_close):
+    current_time_utc = now_utc.astimezone(pytz.utc).time()
+    
+    if current_weekday == 5 or (current_weekday == 6 and current_time_utc >= forex_close):
         print(f"\033[91mIl mercato {symbol} è chiuso\033[0m")
         logging.info(f"Il mercato {symbol} è chiuso\n")
         return False
-    elif current_weekday == 0 and current_time < forex_open:
+    elif current_weekday == 6 and current_time_utc < forex_open:
         print(f"\033[91mIl mercato {symbol} è chiuso\033[0m")
         logging.info(f"Il mercato {symbol} è chiuso\n")
         return False

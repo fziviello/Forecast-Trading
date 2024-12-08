@@ -444,7 +444,6 @@ def startForecast():
     if rate_exchange:
         EXCHANGE_RATE = rate_exchange
 
-    print(tradingClient.get_account_info())
     if forex_market_status(SYMBOL) or IS_GYM:
         if SEND_SERVER_SIGNAL:
             if USE_SERVER_MT5:

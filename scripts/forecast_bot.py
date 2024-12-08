@@ -505,8 +505,8 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     if SYMBOL == "ALL":
-        list_symbol = get_all_exist_models(MODELS_FOLDER)
-        for symbolName in list_symbol:
+        list_symbols = get_all_exist_models(MODELS_FOLDER)
+        for symbolName in list_symbols:
             SYMBOL = symbolName
             startForecast()
     else:    

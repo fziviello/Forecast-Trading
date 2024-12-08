@@ -5,8 +5,8 @@ import logging
 import time
 import argparse
 from datetime import datetime
-from utilities.utility import str_to_bool, get_system_type
-from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH
+from utilities.utility import str_to_bool, get_system_type, get_all_exist_models
+from utilities.folder_config import setup_folders, LOGS_FOLDER, LOG_TRAINING_FILE_PATH, MODELS_FOLDER
 from config import TIME_MINUTE_REPEAT, N_REPEAT
 
 SEND_TELEGRAM = False
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("--notify", type=str, required=False, help="Invia notifica al canale telegram")
     parser.add_argument("--sendSignal", type=str, required=False, help="Invia il segnale al server MT5")
     args = parser.parse_args()
+    symbols = (args.symbols).upper()
     
     if args.sendSignal is not None :
         SEND_SERVER_SIGNAL = str_to_bool(args.sendSignal)
@@ -112,7 +113,11 @@ if __name__ == "__main__":
     if args.notify is not None :
         SEND_TELEGRAM = str_to_bool(args.notify)
     
-    symbols = (args.symbols.upper()).split(',')
+    if symbols == "ALL":
+        list_symbols = get_all_exist_models(MODELS_FOLDER)
+        symbols = ",".join(list_symbols)
+
+    symbols = symbols.split(',')
     now = datetime.now()
     print(f'\033[96mTrainer Avviato il {now.strftime("%Y-%m-%d %H:%M:%S")} per {N_REPEAT} esecuzioni\033[0m\n')
     
@@ -120,7 +125,7 @@ if __name__ == "__main__":
     
     #avvio statistiche
     print(f"\033[93m*** Genero le Statistiche dei Training\033[0m\n")
-    command = [PYTHON_PATH, "get_statistics.py", "--ALL"]
+    command = [ PYTHON_PATH, "get_statistics.py", "--ALL" ]
     command.extend(["--notify", str(SEND_TELEGRAM).lower()])
 
     process3 = subprocess.Popen(
@@ -128,8 +133,7 @@ if __name__ == "__main__":
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         bufsize=1,
-        text=True,
-        encoding='utf-8'
+        text=True
     )
 
     if process3.stdout:

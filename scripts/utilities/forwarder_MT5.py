@@ -165,7 +165,7 @@ class TradingAPIClient:
             return "Server Request Error"
         
     def get_orders_palaced(self, symbol=None, max_minutes=60):
-        url = f"{self.server_url}/order/placed"
+        url = f"{self.server_url}/orders?status=placed"
         headers = {"Content-Type": "application/json"}
         
         try:

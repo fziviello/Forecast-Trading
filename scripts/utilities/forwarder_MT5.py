@@ -97,7 +97,7 @@ class TradingAPIClient:
             return "Server Request Error"
 
     def update_order(self, ticket, price, stop_loss, take_profit):
-        url = f"{self.server_url}/order/update"
+        url = f"{self.server_url}/order"
         headers = {"Content-Type": "application/json"}
         
         data = {
@@ -134,7 +134,7 @@ class TradingAPIClient:
             return "Server Request Error"
             
     def delete_order(self, ticket):
-        url = f"{self.server_url}/order/delete"
+        url = f"{self.server_url}/order"
         headers = {"Content-Type": "application/json"}
         
         data = {
@@ -192,7 +192,7 @@ class TradingAPIClient:
             return "Server Request Error"
 
     def get_account_info(self):
-            url = f"{self.server_url}/account/info"
+            url = f"{self.server_url}/account"
             headers = {"Content-Type": "application/json"}
             
             try:

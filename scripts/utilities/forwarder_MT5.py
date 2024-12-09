@@ -46,7 +46,7 @@ class TradingAPIClient:
         self.server_url = server_url
 
     def create_order(self, symbol, order_type, volume, price, stop_loss=None, take_profit=None):
-        url = f"{self.server_url}/order"
+        url = f"{self.server_url}/orders"
         headers = {"Content-Type": "application/json"}
         
         order_type = (order_type.replace(" ", "_")).lower()
@@ -97,7 +97,7 @@ class TradingAPIClient:
             return "Server Request Error"
 
     def update_order(self, ticket, price, stop_loss, take_profit):
-        url = f"{self.server_url}/order"
+        url = f"{self.server_url}/orders"
         headers = {"Content-Type": "application/json"}
         
         data = {
@@ -134,7 +134,7 @@ class TradingAPIClient:
             return "Server Request Error"
             
     def delete_order(self, ticket):
-        url = f"{self.server_url}/order"
+        url = f"{self.server_url}/orders"
         headers = {"Content-Type": "application/json"}
         
         data = {

@@ -31,7 +31,6 @@ def forex_market_status(symbol: str) -> bool:
     forex_close = time(22, 0)  # 22:00 UTC (venerdì)
     
     now_utc = datetime.now(pytz.timezone('Europe/Rome'))
-    current_time = now_utc.time()
     current_weekday = now_utc.weekday()  # 0 = lunedì, 6 = domenica
     
     current_time_utc = now_utc.astimezone(pytz.utc).time()

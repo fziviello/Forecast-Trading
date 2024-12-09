@@ -88,8 +88,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mfilter_expired_orders\033[0m")
-            logging.error(f"filter_expired_orders")     
+            print(f"\033[91mcreate_order: Timeout Server Error\033[0m")
+            logging.error(f"create_order: Timeout Server Error")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -125,8 +125,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mfilter_expired_orders\033[0m")
-            logging.error(f"filter_expired_orders")     
+            print(f"\033[91mupdate_order: Timeout Server Error\033[0m")
+            logging.error(f"update_order Timeout Server Error")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -156,8 +156,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mfilter_expired_orders\033[0m")
-            logging.error(f"filter_expired_orders")     
+            print(f"\033[91mdelete_order: Timeout Server Error\033[0m")
+            logging.error(f"delete_order: Timeout Server Error")     
             return "Timeout Server Error"
         except requests.exceptions.RequestException as e:
             print(f"\033[91mErrore durante la richiesta al server: {str(e)}\033[0m")
@@ -182,8 +182,8 @@ class TradingAPIClient:
                 return error_detail
         
         except requests.exceptions.Timeout:
-            print(f"\033[91mfilter_expired_orders\033[0m")
-            logging.error(f"filter_expired_orders")     
+            print(f"\033[91mget_orders_palaced: Timeout Server Error\033[0m")
+            logging.error(f"get_orders_palaced: Timeout Server Error")     
             return "Timeout Server Error"
         
         except requests.exceptions.RequestException as e:
@@ -209,8 +209,8 @@ class TradingAPIClient:
                     return error_detail
             
             except requests.exceptions.Timeout:
-                print(f"\033[91mfilter_expired_orders\033[0m")
-                logging.error(f"filter_expired_orders")     
+                print(f"\033[91mget_account_info: Timeout Server Error\033[0m")
+                logging.error(f"get_account_info: Timeout Server Error")     
                 return "Timeout Server Error"
             
             except requests.exceptions.RequestException as e:
